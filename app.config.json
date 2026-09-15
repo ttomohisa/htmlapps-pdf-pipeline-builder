@@ -1,0 +1,26 @@
+{
+  "$schema": "./schemas/app-config.schema.json",
+  "name": "PDF Pipeline Builder",
+  "nameJa": "PDF Pipeline Builder",
+  "slug": "pdf-pipeline-builder",
+  "version": "1.0.0",
+  "description": "Build reusable PDF workflows with nodes, local previews, document processing, and browser-local Recipes.",
+  "descriptionJa": "PDF処理をノードで組み、途中結果と最終結果を確認しながら、保存Recipeとして繰り返し使える完全ローカル処理のWebアプリです。",
+  "defaultLanguage": "auto",
+  "repository": {
+    "owner": "ttomohisa",
+    "name": "htmlapps-pdf-pipeline-builder"
+  },
+  "build": {
+    "output": "dist/index.html",
+    "blockRuntimeNetwork": true,
+    "selfExtract": {
+      "enabled": true,
+      "output": "dist/index.self-extract.html"
+    },
+    "sizeBudget": {
+      "readableWarningMb": 8,
+      "selfExtractWarningMb": 4
+    }
+  }
+}
