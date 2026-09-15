@@ -19,8 +19,17 @@ test('standalone artifact has local-only CSP and formal app marker',()=>{
   assert.match(dist,/appVersion:APP_CONFIG\.version/);
   assert.match(dist,/PDF Pipeline Builder <span class="version-badge">v1\.0\.0<\/span>/);
   assert.doesNotMatch(template,/second Consumer|second consumer|validation Consumer|検証Consumer|Node Editor Core検証/);
-  assert.doesNotMatch(dist,/__APP_CONFIG_JSON__|__BUILD_MANIFEST_JSON__|__NODE_EDITOR_CORE_SOURCE__|__PDF_LIB_SOURCE__/);
+  assert.doesNotMatch(dist,/__APP_CONFIG_JSON__|__BUILD_MANIFEST_JSON__|__EMBEDDED_ASSET_BUNDLE_JSON__|__NODE_EDITOR_CORE_SOURCE__|__PDF_LIB_SOURCE__/);
   assert.doesNotMatch(dist,/^\s*export\s+default\s+NodeEditorCore/m);
+});
+
+test('release build contract matches the current htmlapps-template asset pipeline',()=>{
+  const builder=fs.readFileSync(path.join(root,'build-standalone.ps1'),'utf8');
+  assert.equal((template.match(/__APP_ICON_DATA_URI__/g)||[]).length,2);
+  for(const token of ['__EMBEDDED_ASSET_BUNDLE_JSON__','id="appBrandIcon"','bytesAsync','blobUrlAsync','outputFilename','window.AppToast']) assert.ok(template.includes(token),token);
+  for(const token of ['compressionSetting','Compress-GzipBytes','build-size-report.json','sizeBudget','DependencyLockPath','tarballSha256','__EMBEDDED_ASSET_BUNDLE_JSON__','AppIconPath','__APP_ICON_DATA_URI__','__NODE_EDITOR_CORE_SOURCE__']) assert.ok(builder.includes(token),token);
+  assert.ok(!template.includes('__EMBEDDED_ASSET_BUNDLE_BASE64__'));
+  assert.ok(!builder.includes('__EMBEDDED_ASSET_BUNDLE_BASE64__'));
 });
 
 test('application source uses pages Ports and Merge without teaching Core PDF semantics',()=>{
@@ -37,7 +46,7 @@ test('application source does not initiate runtime network APIs',()=>{
 
 test('all classic inline scripts parse',()=>{
   const scripts=[...dist.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map(m=>m[1]);
-  assert.equal(scripts.length,3);
+  assert.equal(scripts.length,2);
   for(const [i,source] of scripts.entries()) assert.doesNotThrow(()=>new vm.Script(source,{filename:`inline-${i}.js`}));
 });
 
@@ -101,7 +110,7 @@ test('provided favicon is embedded unchanged and reused as the header icon',()=>
   assert.match(favicon,/#11644f/i);
   const encoded=Buffer.from(favicon).toString('base64');
   assert.ok(dist.includes('data:image/svg+xml;base64,'+encoded));
-  assert.match(template,/<img src="__APP_ICON_DATA_URI__" alt="">/);
+  assert.match(template,/<img id="appBrandIcon" src="__APP_ICON_DATA_URI__" alt="">/);
 });
 
 

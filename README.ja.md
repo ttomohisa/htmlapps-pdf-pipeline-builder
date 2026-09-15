@@ -35,11 +35,11 @@ GitHub Pagesから最初のHTMLを読み込んだ後、選択したPDF、途中�
 ### 単一HTMLで使う
 
 1. リリースZIPをダウンロードするか、このリポジトリをクローンします。
-2. Windowsでは `build-standalone.bat`、または `node build.mjs` を実行します。
+2. Windowsで `build-standalone.bat` を実行します。PowerShellスクリプトを検査し、必要に応じて固定済み依存パッケージを取得して、単一HTMLを生成します。
 3. 生成された `dist/index.html` を現在のChromium系ブラウザで開きます。
 4. 生成後は `dist/index.html` 1ファイルを任意の場所へコピーでき、ネットワーク接続なしでも利用できます。
 
-単一HTMLの**ビルドにはNode.jsが必要**です。生成済みの `dist/index.html` を使うだけならNode.jsは不要です。
+正式ビルドに必要なのはWindows PowerShellと標準の `tar.exe` で、Node.jsは不要です。Node.jsはリポジトリの開発用テスト／高速ローカルビルド補助にのみ使用します。
 
 ## 使い方
 
@@ -116,11 +116,13 @@ Preview表示にはブラウザー内蔵のPDF表示機能を使用します。�
 └─ dist/                            # 生成物
 ```
 
-ビルド:
+正式ビルド（Windows）:
 
-```bash
-node build.mjs
+```bat
+build-standalone.bat
 ```
+
+開発中の高速ローカルビルドには `node build.mjs` も利用できます。GitHub Actionsの正式ビルド経路は上記PowerShellビルダーです。
 
 テスト:
 

@@ -35,11 +35,11 @@ Just [open the demo](https://ttomohisa.github.io/htmlapps-pdf-pipeline-builder/)
 ### Use the standalone HTML
 
 1. Download a release package or clone this repository.
-2. Run `build-standalone.bat` on Windows, or run `node build.mjs`.
+2. On Windows, run `build-standalone.bat`. It verifies the PowerShell scripts, downloads the pinned dependency archive when needed, and generates the standalone files.
 3. Open the generated `dist/index.html` in a current Chromium-based browser.
 4. Copy that single HTML file wherever you need it. After it has been generated, the app can run without a network connection.
 
-Node.js is required to build the standalone HTML. It is not required to use the generated `dist/index.html`.
+The release builder uses Windows PowerShell and the built-in `tar.exe`; Node.js is not required for the release build or for using `dist/index.html`. Node.js is used only for the repository's developer-side test / fast local build helpers.
 
 ## Usage
 
@@ -116,11 +116,13 @@ The workflow also uploads `dist/index.html`, `dist/index.self-extract.html`, and
 └─ dist/                            # Generated release artifacts
 ```
 
-Build:
+Release build on Windows:
 
-```bash
-node build.mjs
+```bat
+build-standalone.bat
 ```
+
+For a fast developer-side local build, `node build.mjs` is also available. The GitHub Actions release path uses the PowerShell builder above.
 
 Test:
 

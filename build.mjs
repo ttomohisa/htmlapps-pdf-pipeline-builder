@@ -29,6 +29,26 @@ if (!/^[a-f0-9]{64}$/.test(pdfLock.tarballSha256 || '')) throw new Error('pdf-li
 const pdfAsset = pdfDependency.assets?.find(asset => asset.key === 'runtime');
 if (!pdfAsset || pdfAsset.path !== 'dist/pdf-lib.min.js') throw new Error('pdf-lib runtime asset declaration is invalid.');
 
+const pdfBytes = Buffer.from(pdfLib, 'utf8');
+const assetBundle = {
+  schemaVersion: 2,
+  dependencies: {
+    'pdf-lib': {
+      package: pdfDependency.package,
+      version: pdfDependency.version,
+      assets: {
+        runtime: {
+          mime: pdfAsset.mime || 'text/javascript',
+          compression: 'none',
+          originalBytes: pdfBytes.length,
+          storedBytes: pdfBytes.length,
+          base64: pdfBytes.toString('base64')
+        }
+      }
+    }
+  }
+};
+
 const manifest = {
   app: config.slug,
   version: config.version,
@@ -53,7 +73,7 @@ const replacements = new Map([
   ['__APP_CONFIG_JSON__', JSON.stringify(config).replaceAll('<','\\u003c')],
   ['__BUILD_MANIFEST_JSON__', JSON.stringify(manifest).replaceAll('<','\\u003c')],
   ['__NODE_EDITOR_CORE_SOURCE__', core],
-  ['__PDF_LIB_SOURCE__', pdfLib],
+  ['__EMBEDDED_ASSET_BUNDLE_JSON__', JSON.stringify(assetBundle).replaceAll('<','\\u003c')],
 ]);
 for (const [key, value] of replacements) {
   const count = template.split(key).length - 1;

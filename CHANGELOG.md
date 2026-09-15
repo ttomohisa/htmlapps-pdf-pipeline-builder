@@ -8,6 +8,8 @@
 - Updated visible version, app metadata, release verification docs, screenshots, and release packaging to v1.0.0.
 - Re-ran desktop / mobile, Japanese / English, local-only runtime, CSP, standalone, self-extract, Pipeline replacement, Quick Recipe, Preview / Result, and persistence regression checks.
 - Kept Node Editor Core 1.0.0, embedded pdf-lib 1.17.1, favicon, and runtime no-network policy unchanged.
+- Aligned the v1.0.0 standalone build path with the current htmlapps-template asset-bundle pipeline so GitHub Actions and local release builds use the same pinned dependency flow.
+- Added a regression guard for the template build contract (`__EMBEDDED_ASSET_BUNDLE_JSON__`, canonical app icon marker, asset loader APIs, and PowerShell builder markers).
 
 ## 0.9.0 - 2026-09-15
 

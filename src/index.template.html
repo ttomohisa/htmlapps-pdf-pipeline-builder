@@ -33,7 +33,7 @@
 </head>
 <body>
   <header class="app-header"><div class="header-inner">
-    <div class="brand"><div class="brand-mark"><img src="__APP_ICON_DATA_URI__" alt=""></div><div class="brand-copy"><p class="brand-name">PDF Pipeline Builder <span class="version-badge">v1.0.0</span></p><p class="brand-meta" data-i18n="brandMeta">PDF処理の手順をノードで組み立てて保存</p></div></div>
+    <div class="brand"><div class="brand-mark"><img id="appBrandIcon" src="__APP_ICON_DATA_URI__" alt=""></div><div class="brand-copy"><p class="brand-name">PDF Pipeline Builder <span class="version-badge">v1.0.0</span></p><p class="brand-meta" data-i18n="brandMeta">PDF処理の手順をノードで組み立てて保存</p></div></div>
     <div class="header-actions"><button class="language-button" id="languageButton" type="button">EN</button><button class="header-icon-button" id="helpButton" type="button" aria-label="使い方"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.8 9a2.35 2.35 0 1 1 3.72 1.9c-.92.67-1.52 1.12-1.52 2.1M12 17h.01"/></svg></button></div>
   </div></header>
   <main class="main">
@@ -97,13 +97,30 @@
   <dialog class="dialog output-preview-dialog" id="outputPreviewDialog"><div class="dialog-head"><div style="min-width:0"><h2 data-i18n="outputPreviewTitle">出力プレビュー</h2><div class="output-preview-meta" id="outputPreviewMeta"></div></div><button class="dialog-close" id="outputPreviewCloseButton" type="button" aria-label="閉じる">×</button></div><div class="dialog-body"><iframe class="output-preview-frame" id="outputPreviewFrame" title="出力プレビュー"></iframe><div class="output-preview-actions"><button class="primary-button" id="outputPreviewSaveButton" type="button" data-i18n="savePdf">PDFを保存</button></div></div></dialog>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script>__PDF_LIB_SOURCE__</script>
   <script>__NODE_EDITOR_CORE_SOURCE__</script>
   <script>
-  (()=>{
+  (async()=>{
     'use strict';
     const APP_CONFIG=__APP_CONFIG_JSON__;
     const BUILD_MANIFEST=__BUILD_MANIFEST_JSON__;
+    // Asset payloads are Base64 exactly once. The JSON bundle itself is embedded directly.
+    const assetBundle=__EMBEDDED_ASSET_BUNDLE_JSON__;
+    const embeddedBlobUrls=new Set();
+    const assetByteCache=new Map();
+    function decodeBase64Bytes(base64){const binary=atob(base64),bytes=new Uint8Array(binary.length);for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);return bytes}
+    function getEmbeddedAsset(dependencyId,assetKey){const asset=assetBundle.dependencies?.[dependencyId]?.assets?.[assetKey];if(!asset)throw new Error(`Embedded asset not found: ${dependencyId}/${assetKey}`);return asset}
+    async function inflateEmbeddedAsset(asset){const stored=decodeBase64Bytes(asset.base64);if(!asset.compression||asset.compression==='none')return stored;if(asset.compression!=='gzip')throw new Error(`Unsupported embedded asset compression: ${asset.compression}`);if(typeof DecompressionStream!=='function')throw new Error('This browser cannot expand gzip-compressed embedded assets.');const stream=new Blob([stored]).stream().pipeThrough(new DecompressionStream('gzip')),expanded=new Uint8Array(await new Response(stream).arrayBuffer());if(Number.isFinite(asset.originalBytes)&&expanded.byteLength!==asset.originalBytes)throw new Error(`Embedded gzip asset size mismatch: expected ${asset.originalBytes}, got ${expanded.byteLength}`);return expanded}
+    window.StandaloneAssets=Object.freeze({
+      manifest:BUILD_MANIFEST,
+      list(){return Object.entries(assetBundle.dependencies||{}).flatMap(([dependencyId,dependency])=>Object.keys(dependency.assets||{}).map(assetKey=>`${dependencyId}/${assetKey}`))},
+      has(dependencyId,assetKey){return Boolean(assetBundle.dependencies?.[dependencyId]?.assets?.[assetKey])},
+      bytes(dependencyId,assetKey){const asset=getEmbeddedAsset(dependencyId,assetKey);if(asset.compression&&asset.compression!=='none')throw new Error(`Embedded asset ${dependencyId}/${assetKey} is gzip-compressed; use await StandaloneAssets.bytesAsync().`);return decodeBase64Bytes(asset.base64)},
+      async bytesAsync(dependencyId,assetKey){const cacheKey=`${dependencyId}/${assetKey}`;if(!assetByteCache.has(cacheKey))assetByteCache.set(cacheKey,inflateEmbeddedAsset(getEmbeddedAsset(dependencyId,assetKey)));return new Uint8Array(await assetByteCache.get(cacheKey))},
+      async blobUrlAsync(dependencyId,assetKey){const asset=getEmbeddedAsset(dependencyId,assetKey),url=URL.createObjectURL(new Blob([await this.bytesAsync(dependencyId,assetKey)],{type:asset.mime||'application/octet-stream'}));embeddedBlobUrls.add(url);return url},
+      async loadClassicScript(dependencyId,assetKey,globalName=''){const sourceUrl=await this.blobUrlAsync(dependencyId,assetKey);try{await new Promise((resolve,reject)=>{const script=document.createElement('script');script.src=sourceUrl;script.onload=resolve;script.onerror=()=>reject(new Error(`Failed to load embedded script: ${dependencyId}/${assetKey}`));document.head.append(script)});return globalName?window[globalName]:true}finally{URL.revokeObjectURL(sourceUrl);embeddedBlobUrls.delete(sourceUrl)}}
+    });
+    window.addEventListener('pagehide',()=>{embeddedBlobUrls.forEach(url=>URL.revokeObjectURL(url));embeddedBlobUrls.clear()});
+    await window.StandaloneAssets.loadClassicScript('pdf-lib','runtime','PDFLib');
     const Core=globalThis.NodeEditorCore;
     const PDFLib=globalThis.PDFLib;
     if(!Core) throw new Error('Node Editor Core did not initialize.');
@@ -149,6 +166,7 @@
     function setResultState(key,params={},error=false){resultState={key,params,error};renderResultState()}
     function applyLanguage(){document.documentElement.lang=language;$$('[data-i18n]').forEach(el=>{const key=el.dataset.i18n;el.textContent=t(key)});$$('[data-i18n-placeholder]').forEach(el=>{el.placeholder=t(el.dataset.i18nPlaceholder)});$('#languageButton').textContent=language==='ja'?'EN':'JA';renderResultState();renderInspector();renderNodeTexts();syncToolbar();renderFileStatus();renderRecipeList();renderQuickRecipes()}
     function showToast(message,error=false){const el=$('#toast');el.textContent=message;el.classList.toggle('error',error);el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2600)}
+    window.AppToast=Object.freeze({show:(message,{error=false}={})=>showToast(message,error)});
     function formatBytes(bytes){const n=Number(bytes)||0;if(n<1024)return `${n} B`;if(n<1024*1024)return `${(n/1024).toFixed(1)} KB`;return `${(n/1024/1024).toFixed(2)} MB`}
     function outputNodes(){return canvas?canvas.getGraph().nodes.filter(node=>node.type==='pdf-output'):[]}
     function inputNodes(){return canvas?canvas.getGraph().nodes.filter(node=>node.type==='pdf-input'):[]}
