@@ -64,4 +64,6 @@ test('mobile sheets remain dismissible and the primary action exposes generated 
   const pdfjs=deps.dependencies.find(item=>item.id==='pdfjs');
   assert.equal(pdfjs?.version,'6.2.108');
   assert.equal(pdfjs?.package,'pdfjs-dist');
+  const pdfLib=deps.dependencies.find(item=>item.id==='pdf-lib');
+  assert.equal(pdfLib?.assets?.find(asset=>asset.key==='runtime')?.compression,'auto');
 });
