@@ -8,6 +8,7 @@ const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const source=fs.readFileSync(path.join(root,'src/index.template.html'),'utf8');
 const config=JSON.parse(fs.readFileSync(path.join(root,'app.config.json'),'utf8'));
 const pkg=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8'));
+const deps=JSON.parse(fs.readFileSync(path.join(root,'dependencies.json'),'utf8'));
 
 test('v1.1.0 adds a canvas-first mobile workspace without changing desktop markup',()=>{
   assert.equal(config.version,'1.1.0');
@@ -54,4 +55,13 @@ test('mobile sheets remain dismissible and the primary action exposes generated 
   assert.match(source,/\.workspace-toolbar\{display:none!important\}/);
   assert.match(source,/mobileResult:'結果'/);
   assert.match(source,/mobileResult:'Result'/);
+  assert.match(source,/id="previewDialogCanvas"/);
+  assert.match(source,/id="outputPreviewCanvas"/);
+  assert.match(source,/renderPdfBytesToCanvas/);
+  assert.match(source,/StandaloneAssets\.importModule\('pdfjs','main'\)/);
+  assert.doesNotMatch(source,/id="previewDialogFrame"/);
+  assert.doesNotMatch(source,/id="outputPreviewFrame"/);
+  const pdfjs=deps.dependencies.find(item=>item.id==='pdfjs');
+  assert.equal(pdfjs?.version,'6.2.108');
+  assert.equal(pdfjs?.package,'pdfjs-dist');
 });
