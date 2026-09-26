@@ -36,10 +36,10 @@ GitHub Pagesから最初のHTMLを読み込んだ後、選択したPDF、途中�
 
 1. リリースZIPをダウンロードするか、このリポジトリをクローンします。
 2. Windowsで `build-standalone.bat` を実行します。PowerShellスクリプトを検査し、必要に応じて固定済み依存パッケージを取得して、単一HTMLを生成します。
-3. 生成された `dist/index.html` を現在のChromium系ブラウザで開きます。
-4. 生成後は `dist/index.html` 1ファイルを任意の場所へコピーでき、ネットワーク接続なしでも利用できます。
+3. ルート直下に生成された `pdf-pipeline-builder.html`（または同一内容の `dist/index.html`）を現在のChromium系ブラウザで開きます。
+4. どちらも単一HTMLとして任意の場所へコピーでき、ネットワーク接続なしでも利用できます。
 
-正式ビルドに必要なのはWindows PowerShellと標準の `tar.exe` で、Node.jsは不要です。Node.jsはリポジトリの開発用テスト／高速ローカルビルド補助にのみ使用します。
+正式ビルドでは、`pdf-pipeline-builder.html` と `dist/index.html` に同一の単一HTMLを生成します。必要なのはWindows PowerShellと標準の `tar.exe` で、Node.jsは不要です。Node.jsはリポジトリの開発用テスト／高速ローカルビルド補助にのみ使用します。
 
 ## 使い方
 
@@ -97,7 +97,7 @@ Pipeline JSONはバックアップ、別端末への移動、Git管理などに�
 3. `main`へプッシュするか、Actions画面から **Deploy standalone app to GitHub Pages** を手動実行します。
 4. 成功後、`https://ttomohisa.github.io/htmlapps-pdf-pipeline-builder/` で公開されます。
 
-ワークフローは `dist/index.html`、`dist/index.self-extract.html`、生成ManifestもBuild Artifactとして保存します。
+検証ワークフローは、ルート直下に生成した `pdf-pipeline-builder.html` と生成ManifestをBuild Artifactとして保存します。
 
 ## 開発とビルド
 
@@ -111,6 +111,7 @@ Pipeline JSONはバックアップ、別端末への移動、Git管理などに�
 ├─ dependencies.lock.json           # 固定バージョン / ハッシュ
 ├─ build.mjs                        # 単一HTML / Self Extract生成
 ├─ build-standalone.bat             # Windows用ビルド入口
+├─ pdf-pipeline-builder.html         # dist/index.htmlと同一内容の生成単一HTML
 ├─ tests/                           # 回帰テスト
 ├─ assets/                          # favicon / screenshot
 └─ dist/                            # 生成物
@@ -149,7 +150,7 @@ GitHub Actionsと同等のリポジトリ検証は、Windows / PowerShellで次�
 - Recipeはこのブラウザーの`localStorage`へ保存。永続保存を利用できない場合はセッション内メモリへフォールバックし、画面に警告を表示
 - GitHub Pages版では最初のHTML配信は発生しますが、選択したPDF内容をアプリから送信しません
 
-完全にネットワークを切って使う場合は、生成済みの `dist/index.html` をローカルで開いてください。
+完全にネットワークを切って使う場合は、生成済みの `pdf-pipeline-builder.html` または `dist/index.html` をローカルで開いてください。
 
 ## 制限事項
 
