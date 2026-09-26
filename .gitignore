@@ -1,6 +1,7 @@
 .cache/
 dist/*
 !dist/.gitkeep
+/pdf-pipeline-builder.html
 *.tmp
 *.part
 .DS_Store
