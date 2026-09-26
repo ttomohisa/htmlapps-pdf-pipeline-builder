@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const source=fs.readFileSync(path.join(root,'src/index.template.html'),'utf8');
 const config=JSON.parse(fs.readFileSync(path.join(root,'app.config.json'),'utf8'));
-const pkg=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8');
+const pkg=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8'));
 
 test('v1.1.0 adds a canvas-first mobile workspace without changing desktop markup',()=>{
   assert.equal(config.version,'1.1.0');
