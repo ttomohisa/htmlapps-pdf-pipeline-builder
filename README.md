@@ -36,10 +36,10 @@ Just [open the demo](https://ttomohisa.github.io/htmlapps-pdf-pipeline-builder/)
 
 1. Download a release package or clone this repository.
 2. On Windows, run `build-standalone.bat`. It verifies the PowerShell scripts, downloads the pinned dependency archive when needed, and generates the standalone files.
-3. Open the generated `dist/index.html` in a current Chromium-based browser.
-4. Copy that single HTML file wherever you need it. After it has been generated, the app can run without a network connection.
+3. Open the generated root-level `pdf-pipeline-builder.html` (or the identical `dist/index.html`) in a current Chromium-based browser.
+4. Copy either standalone HTML file wherever you need it. After it has been generated, the app can run without a network connection.
 
-The release builder uses Windows PowerShell and the built-in `tar.exe`; Node.js is not required for the release build or for using `dist/index.html`. Node.js is used only for the repository's developer-side test / fast local build helpers.
+The release builder writes the same standalone HTML bytes to both `pdf-pipeline-builder.html` and `dist/index.html`. It uses Windows PowerShell and the built-in `tar.exe`; Node.js is not required for the release build. Node.js is used only for the repository's developer-side test / fast local build helpers.
 
 ## Usage
 
@@ -97,7 +97,7 @@ The repository includes a workflow that builds the standalone HTML, verifies the
 3. Push to `main`, or manually run **Deploy standalone app to GitHub Pages** from the Actions tab.
 4. After a successful deployment, the demo is available at `https://ttomohisa.github.io/htmlapps-pdf-pipeline-builder/`.
 
-The workflow also uploads `dist/index.html`, `dist/index.self-extract.html`, and the generated manifests as a build artifact.
+The validation workflow uploads the generated root-level `pdf-pipeline-builder.html` together with the generated manifests as its build artifact.
 
 ## Development and build layout
 
@@ -111,6 +111,7 @@ The workflow also uploads `dist/index.html`, `dist/index.self-extract.html`, and
 ├─ dependencies.lock.json           # Pinned dependency lock + hashes
 ├─ build.mjs                        # Standalone / self-extract builder
 ├─ build-standalone.bat             # Windows build entry point
+├─ pdf-pipeline-builder.html         # Generated standalone copy of dist/index.html
 ├─ tests/                           # Regression tests
 ├─ assets/                          # favicon and screenshots
 └─ dist/                            # Generated release artifacts
@@ -149,7 +150,7 @@ The generated HTML is designed for fully local PDF processing after the file has
 - Recipes are stored in this browser's `localStorage`; if persistent storage is unavailable, the app falls back to session memory and shows a warning.
 - The GitHub Pages version requires the initial HTML request, but selected PDF content is not transmitted by the app.
 
-For use with the network completely disconnected, open the generated `dist/index.html` locally.
+For use with the network completely disconnected, open the generated `pdf-pipeline-builder.html` or `dist/index.html` locally.
 
 ## Limitations
 
