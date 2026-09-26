@@ -376,6 +376,17 @@ New-Item -ItemType Directory -Force -Path $outputDirectory | Out-Null
   -RequireNetworkBlock ([bool]$appConfig.build.blockRuntimeNetwork) `
   -ForbiddenPlaceholders @($replacements.Keys)
 
+if (-not $OutputPathWasSpecified) {
+  $rootStandalonePath = Join-Path $Root (([string]$appConfig.slug) + ".html")
+  [System.IO.File]::Copy($OutputPath, $rootStandalonePath, $true)
+  $outputHash = Get-Sha256FileHex $OutputPath
+  $rootStandaloneHash = Get-Sha256FileHex $rootStandalonePath
+  if ($rootStandaloneHash -ne $outputHash) {
+    throw "Root standalone HTML does not match the generated index.html."
+  }
+  Write-Step "Generated root standalone HTML: $([System.IO.Path]::GetFileName($rootStandalonePath))"
+}
+
 $selfExtractEnabled = $false
 $selfExtractOutputPath = ""
 if (-not $SkipSelfExtract -and ($appConfig.build.PSObject.Properties.Name -contains "selfExtract")) {

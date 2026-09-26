@@ -23,8 +23,8 @@ GitHub Pagesから最初のHTMLを読み込んだ後、選択したPDF、途中�
 - **Recipeで処理手順をすぐ再利用** — Pipelineをブラウザー内Recipeとして保存し、ノードエディタ上部で別PDFを指定して、Canvasへ反映するか、Canvasを変更せず出力Previewまで実行できます。
 - **分岐と再結合** — Splitで`選択 / 残り`へ分岐し、Mergeで2〜6入力を決めた順番で結合できます。
 - **文書仕上げもNode化** — ページ番号、テキストウォーターマーク、プリセットスタンプをPipelineの好きな位置へ追加できます。
-- **PC / スマートフォンで編集** — Nodeのクリック追加とドラッグ追加、Paletteグループ開閉、Undo / Redo、Pan / Zoom / 全体表示、MiniMap、補助線、Grid吸着、浮かせて拡大に対応します。
-- **単一HTML・完全ローカル処理** — `pdf-lib`とNode Editor Coreを内包し、実行時外部通信を行いません。PDF bytesはPipeline JSONやRecipeへ保存しません。
+- **PC / スマートフォンで編集** — PCは3カラムの編集画面を維持し、スマートフォンではCanvasを中心に、ノード追加・設定・その他の操作・実行結果をBottom Sheetと下部固定アクションから操作できます。
+- **単一HTML・完全ローカル処理** — `pdf-lib`、PDF.js、Node Editor Coreを内包し、実行時外部通信を行いません。PDF bytesはPipeline JSONやRecipeへ保存しません。
 
 ## すぐに使う
 
@@ -36,10 +36,10 @@ GitHub Pagesから最初のHTMLを読み込んだ後、選択したPDF、途中�
 
 1. リリースZIPをダウンロードするか、このリポジトリをクローンします。
 2. Windowsで `build-standalone.bat` を実行します。PowerShellスクリプトを検査し、必要に応じて固定済み依存パッケージを取得して、単一HTMLを生成します。
-3. 生成された `dist/index.html` を現在のChromium系ブラウザで開きます。
-4. 生成後は `dist/index.html` 1ファイルを任意の場所へコピーでき、ネットワーク接続なしでも利用できます。
+3. ルート直下に生成された `pdf-pipeline-builder.html`（または同一内容の `dist/index.html`）を現在のChromium系ブラウザで開きます。
+4. どちらも単一HTMLとして任意の場所へコピーでき、ネットワーク接続なしでも利用できます。
 
-正式ビルドに必要なのはWindows PowerShellと標準の `tar.exe` で、Node.jsは不要です。Node.jsはリポジトリの開発用テスト／高速ローカルビルド補助にのみ使用します。
+正式ビルドでは、`pdf-pipeline-builder.html` と `dist/index.html` に同一の単一HTMLを生成します。必要なのはWindows PowerShellと標準の `tar.exe` で、Node.jsは不要です。Node.jsはリポジトリの開発用テスト／高速ローカルビルド補助にのみ使用します。
 
 ## 使い方
 
@@ -84,9 +84,9 @@ Pipeline JSONはバックアップ、別端末への移動、Git管理などに�
 - Splitでは`選択 / 残り`を切り替え
 - 各Previewページを拡大表示可能
 - PDF Outputだけは「途中結果」ではなく**「結果」**として表示
-- Preview / 出力表示は一時的なローカルBlob PDFを使用し、外部URLからPDFデータを読み込みません
+- Preview / 出力表示は内包したPDF.jsでCanvasへ描画し、外部URLからPDFデータを読み込みません
 
-Preview表示にはブラウザー内蔵のPDF表示機能を使用します。主要対象はChrome / Edgeです。
+ブラウザー内蔵PDFビューアに依存しないため、Androidで単一HTMLを`content://`から開いた場合もPreviewを表示できます。
 
 ## GitHub Pagesで公開する
 
@@ -97,7 +97,7 @@ Preview表示にはブラウザー内蔵のPDF表示機能を使用します。�
 3. `main`へプッシュするか、Actions画面から **Deploy standalone app to GitHub Pages** を手動実行します。
 4. 成功後、`https://ttomohisa.github.io/htmlapps-pdf-pipeline-builder/` で公開されます。
 
-ワークフローは `dist/index.html`、`dist/index.self-extract.html`、生成ManifestもBuild Artifactとして保存します。
+検証ワークフローは、ルート直下に生成した `pdf-pipeline-builder.html` と生成ManifestをBuild Artifactとして保存します。
 
 ## 開発とビルド
 
@@ -111,6 +111,7 @@ Preview表示にはブラウザー内蔵のPDF表示機能を使用します。�
 ├─ dependencies.lock.json           # 固定バージョン / ハッシュ
 ├─ build.mjs                        # 単一HTML / Self Extract生成
 ├─ build-standalone.bat             # Windows用ビルド入口
+├─ pdf-pipeline-builder.html         # dist/index.htmlと同一内容の生成単一HTML
 ├─ tests/                           # 回帰テスト
 ├─ assets/                          # favicon / screenshot
 └─ dist/                            # 生成物
@@ -144,17 +145,16 @@ GitHub Actionsと同等のリポジトリ検証は、Windows / PowerShellで次�
 
 - Content Security Policyに `connect-src 'none'` を設定
 - アプリ実行時に `fetch`、`XMLHttpRequest`、`WebSocket` を使用しない
-- 途中結果 / 結果Previewは `frame-src blob:` で許可したローカルBlob PDFだけを表示
+- 途中結果 / 結果Previewは内包したPDF.jsでCanvasへローカル描画
 - 元PDF bytesはメモリ上だけに保持し、Pipeline JSONやRecipeへ書き込まない
 - Recipeはこのブラウザーの`localStorage`へ保存。永続保存を利用できない場合はセッション内メモリへフォールバックし、画面に警告を表示
 - GitHub Pages版では最初のHTML配信は発生しますが、選択したPDF内容をアプリから送信しません
 
-完全にネットワークを切って使う場合は、生成済みの `dist/index.html` をローカルで開いてください。
+完全にネットワークを切って使う場合は、生成済みの `pdf-pipeline-builder.html` または `dist/index.html` をローカルで開いてください。
 
 ## 制限事項
 
-- Preview表示はブラウザー内蔵のPDF表示機能に依存します。主要対象はChrome / Edgeです。
-- Watermarkのカスタム文字はASCII文字に限定しています。v1.0.0では日本語フォントなどのカスタムフォント埋め込みは行いません。
+- Watermarkのカスタム文字はASCII文字に限定しています。現在は日本語フォントなどのカスタムフォント埋め込みは行いません。
 - 電子署名付きPDFを加工すると署名は無効になる場合があります。
 - 出力PDFはページを再構成するため、しおり、添付ファイル、フォーム、署名、Outlineなどの文書レベル情報を引き継げない場合があります。
 - 大容量PDFや複雑な分岐を持つPipelineでは、完全ローカル処理のため端末メモリを多く使用します。
@@ -166,6 +166,7 @@ GitHub Actionsと同等のリポジトリ検証は、Windows / PowerShellで次�
 | ライブラリ | バージョン | ライセンス | 用途 |
 | --- | ---: | --- | --- |
 | pdf-lib | 1.17.1 | MIT | PDF読み込み、ページ複製・変換、文書加工、PDF生成 |
+| PDF.js | 6.2.108 | Apache-2.0 | 途中結果 / 出力PDFのCanvasプレビュー描画 |
 | Node Editor Core | 1.0.0 | Project source | Graph編集、Port / Edge、選択、Viewport、Undo / Redo、MiniMap、保存形式 |
 
 実行時CDNから依存ライブラリを読み込みません。詳細は [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) を参照してください。

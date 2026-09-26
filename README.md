@@ -23,8 +23,8 @@ GitHub Pages delivers the initial HTML. After it loads, selected PDFs, intermedi
 - **Reuse saved Recipes quickly** — Save a Pipeline as a browser-local Recipe, attach new PDFs above the editor, then either apply it to the Canvas for editing or generate an output preview without replacing the current Canvas.
 - **Branch and combine page streams** — Split a stream into Selected / Rest and Merge 2–6 inputs in a defined order.
 - **Add document finishing steps** — Insert page numbers, text watermarks, and preset text stamps at the exact point where they should affect the Pipeline.
-- **Edit comfortably on desktop and mobile** — Click or drag nodes from the palette, collapse palette groups, use Undo / Redo, Pan / Zoom / Fit, MiniMap, helper lines, Grid snap, and the enlarged workspace.
-- **Private, single-HTML operation** — `pdf-lib` and Node Editor Core are embedded, runtime network access is blocked, and source/generated PDF bytes are not stored in Pipeline JSON or Recipes.
+- **Edit comfortably on desktop and mobile** — Desktop keeps the three-column editor, while mobile centers the Canvas and moves node adding, settings, secondary tools, and results into bottom sheets with a fixed action bar.
+- **Private, single-HTML operation** — `pdf-lib`, PDF.js, and Node Editor Core are embedded, runtime network access is blocked, and source/generated PDF bytes are not stored in Pipeline JSON or Recipes.
 
 ## Quick start
 
@@ -36,10 +36,10 @@ Just [open the demo](https://ttomohisa.github.io/htmlapps-pdf-pipeline-builder/)
 
 1. Download a release package or clone this repository.
 2. On Windows, run `build-standalone.bat`. It verifies the PowerShell scripts, downloads the pinned dependency archive when needed, and generates the standalone files.
-3. Open the generated `dist/index.html` in a current Chromium-based browser.
-4. Copy that single HTML file wherever you need it. After it has been generated, the app can run without a network connection.
+3. Open the generated root-level `pdf-pipeline-builder.html` (or the identical `dist/index.html`) in a current Chromium-based browser.
+4. Copy either standalone HTML file wherever you need it. After it has been generated, the app can run without a network connection.
 
-The release builder uses Windows PowerShell and the built-in `tar.exe`; Node.js is not required for the release build or for using `dist/index.html`. Node.js is used only for the repository's developer-side test / fast local build helpers.
+The release builder writes the same standalone HTML bytes to both `pdf-pipeline-builder.html` and `dist/index.html`. It uses Windows PowerShell and the built-in `tar.exe`; Node.js is not required for the release build. Node.js is used only for the repository's developer-side test / fast local build helpers.
 
 ## Usage
 
@@ -84,9 +84,9 @@ Intermediate Preview evaluates only the upstream path needed by the selected nod
 - Split Preview can switch between `Selected` and `Rest`.
 - Each preview page can be enlarged.
 - PDF Output uses the label **Result** instead of Intermediate Preview.
-- Preview and output frames use temporary local Blob URLs; they do not load PDF data from external URLs.
+- Preview pages are rendered to Canvas by the embedded PDF.js runtime; they do not load PDF data from external URLs.
 
-Preview display uses the browser's built-in inline PDF viewer. Chrome and Edge are the primary targets.
+Preview rendering no longer depends on the browser's built-in inline PDF viewer, so the standalone HTML also works when opened through Android's local `content://` file flow.
 
 ## Publish with GitHub Pages
 
@@ -97,7 +97,7 @@ The repository includes a workflow that builds the standalone HTML, verifies the
 3. Push to `main`, or manually run **Deploy standalone app to GitHub Pages** from the Actions tab.
 4. After a successful deployment, the demo is available at `https://ttomohisa.github.io/htmlapps-pdf-pipeline-builder/`.
 
-The workflow also uploads `dist/index.html`, `dist/index.self-extract.html`, and the generated manifests as a build artifact.
+The validation workflow uploads the generated root-level `pdf-pipeline-builder.html` together with the generated manifests as its build artifact.
 
 ## Development and build layout
 
@@ -111,6 +111,7 @@ The workflow also uploads `dist/index.html`, `dist/index.self-extract.html`, and
 ├─ dependencies.lock.json           # Pinned dependency lock + hashes
 ├─ build.mjs                        # Standalone / self-extract builder
 ├─ build-standalone.bat             # Windows build entry point
+├─ pdf-pipeline-builder.html         # Generated standalone copy of dist/index.html
 ├─ tests/                           # Regression tests
 ├─ assets/                          # favicon and screenshots
 └─ dist/                            # Generated release artifacts
@@ -144,17 +145,16 @@ The generated HTML is designed for fully local PDF processing after the file has
 
 - Content Security Policy includes `connect-src 'none'`.
 - Runtime `fetch`, `XMLHttpRequest`, and `WebSocket` are not used by the application.
-- Intermediate / Result previews use only local Blob PDF URLs, allowed by `frame-src blob:`.
+- Intermediate / Result previews are rendered locally to Canvas by the embedded PDF.js runtime.
 - Source PDF bytes stay in runtime memory and are not written into Pipeline JSON or Recipe storage.
 - Recipes are stored in this browser's `localStorage`; if persistent storage is unavailable, the app falls back to session memory and shows a warning.
 - The GitHub Pages version requires the initial HTML request, but selected PDF content is not transmitted by the app.
 
-For use with the network completely disconnected, open the generated `dist/index.html` locally.
+For use with the network completely disconnected, open the generated `pdf-pipeline-builder.html` or `dist/index.html` locally.
 
 ## Limitations
 
-- Preview display depends on the browser's built-in inline PDF viewer; Chrome and Edge are the primary supported targets.
-- Custom Watermark text is limited to ASCII characters because v1.0.0 uses the embedded standard PDF font and does not embed custom Japanese fonts.
+- Custom Watermark text is limited to ASCII characters because the app uses the embedded standard PDF font and does not embed custom Japanese fonts.
 - PDF editing can invalidate digital signatures.
 - Bookmarks, attachments, forms, signatures, outlines, and other document-level structures are not guaranteed to be preserved when pages are rebuilt into a new output PDF.
 - Large PDFs and complex multi-branch Pipelines can consume substantial device memory because processing is fully local.
@@ -166,6 +166,7 @@ For use with the network completely disconnected, open the generated `dist/index
 | Library | Version | License | Purpose |
 | --- | ---: | --- | --- |
 | pdf-lib | 1.17.1 | MIT | Local PDF loading, page copying, transformation, document overlays, and output generation |
+| PDF.js | 6.2.108 | Apache-2.0 | Local Canvas rendering for intermediate and output PDF previews |
 | Node Editor Core | 1.0.0 | Project source | Graph editing, ports/edges, selection, viewport, Undo / Redo, MiniMap, and serialization |
 
 No dependency is loaded from a runtime CDN. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for details.

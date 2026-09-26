@@ -7,6 +7,12 @@
       "package": "pdf-lib",
       "version": "1.17.1",
       "tarballSha256": "a7cc1eaf12e41e612a7be581162a63b18118aefc01e90f6a1f35347b1f324a1c"
+    },
+    {
+      "id": "pdfjs",
+      "package": "pdfjs-dist",
+      "version": "6.2.108",
+      "tarballSha256": "b3e68d5cda70551a90b3f771419d379e20fc788ce056fa32de73608e01df47f4"
     }
   ]
 }
