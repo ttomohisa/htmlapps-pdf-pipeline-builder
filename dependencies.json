@@ -13,7 +13,7 @@
           "path": "dist/pdf-lib.min.js",
           "mime": "text/javascript",
           "stripSourceMapComment": true,
-          "compression": "none"
+          "compression": "auto"
         }
       ],
       "updates": {
