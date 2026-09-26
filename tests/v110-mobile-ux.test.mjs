@@ -21,6 +21,9 @@ test('v1.1.0 adds a canvas-first mobile workspace without changing desktop marku
   assert.match(source,/mobile-sheet-tools/);
   assert.match(source,/id="mobileToolsSheet"/);
   assert.match(source,/id="mobileExpandButton"/);
+  assert.match(source,/\.mobile-sheet-title\{[^}]*white-space:nowrap/);
+  assert.match(source,/\.mobile-sheet-close\{position:absolute;right:9px;top:12px/);
+  assert.doesNotMatch(source,/<div class="mobile-sheet-head"><span aria-hidden="true"><\/span>/);
   assert.match(source,/body\.mobile-sheet-tools \.mobile-tools-sheet/);
   assert.doesNotMatch(source,/body\.mobile-sheet-tools \.workspace-toolbar/);
   assert.match(source,/mobile-sheet-result/);
