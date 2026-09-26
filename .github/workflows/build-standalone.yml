@@ -52,7 +52,7 @@ jobs:
         with:
           name: standalone-html-${{ github.event.pull_request.head.sha || github.sha }}-${{ steps.size.outputs.bytes }}b
           path: |
-            dist/index.html
+            pdf-pipeline-builder.html
             dist/dependency-manifest.json
             dist/build-size-report.json
             dist/.nojekyll
