@@ -19,6 +19,10 @@ test('v1.1.0 adds a canvas-first mobile workspace without changing desktop marku
   assert.match(source,/mobile-sheet-palette/);
   assert.match(source,/mobile-sheet-inspector/);
   assert.match(source,/mobile-sheet-tools/);
+  assert.match(source,/id="mobileToolsSheet"/);
+  assert.match(source,/id="mobileExpandButton"/);
+  assert.match(source,/body\.mobile-sheet-tools \.mobile-tools-sheet/);
+  assert.doesNotMatch(source,/body\.mobile-sheet-tools \.workspace-toolbar/);
   assert.match(source,/mobile-sheet-result/);
   assert.match(source,/function openMobileSheet\(name\)/);
   assert.match(source,/openMobileSheet\('inspector'\)/);
@@ -33,7 +37,10 @@ test('mobile sheets remain dismissible and the primary action exposes generated 
   assert.match(source,/data-mobile-sheet-close/);
   assert.match(source,/mobileSheetBackdrop'\)\.onclick=closeMobileSheets/);
   assert.match(source,/e\.key==='Escape'.*mobile-sheet-open/);
-  assert.match(source,/outputBytes\?\{openMobileSheet\('result'\)/);
+  assert.match(source,/if\(outputBytes\)\{openMobileSheet\('result'\)/);
+  assert.match(source,/function setExpanded\(expanded\)\{[^}]*closeMobileSheets\(\)/);
+  assert.match(source,/mobileExpandButton'\)\.onclick=\(\)=>setExpanded/);
+  assert.match(source,/\.workspace-toolbar\{display:none!important\}/);
   assert.match(source,/mobileResult:'結果'/);
   assert.match(source,/mobileResult:'Result'/);
 });
