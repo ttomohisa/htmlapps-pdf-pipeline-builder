@@ -24,7 +24,7 @@ GitHub Pages delivers the initial HTML. After it loads, selected PDFs, intermedi
 - **Branch and combine page streams** — Split a stream into Selected / Rest and Merge 2–6 inputs in a defined order.
 - **Add document finishing steps** — Insert page numbers, text watermarks, and preset text stamps at the exact point where they should affect the Pipeline.
 - **Edit comfortably on desktop and mobile** — Desktop keeps the three-column editor, while mobile centers the Canvas and moves node adding, settings, secondary tools, and results into bottom sheets with a fixed action bar.
-- **Private, single-HTML operation** — `pdf-lib` and Node Editor Core are embedded, runtime network access is blocked, and source/generated PDF bytes are not stored in Pipeline JSON or Recipes.
+- **Private, single-HTML operation** — `pdf-lib`, PDF.js, and Node Editor Core are embedded, runtime network access is blocked, and source/generated PDF bytes are not stored in Pipeline JSON or Recipes.
 
 ## Quick start
 
@@ -84,9 +84,9 @@ Intermediate Preview evaluates only the upstream path needed by the selected nod
 - Split Preview can switch between `Selected` and `Rest`.
 - Each preview page can be enlarged.
 - PDF Output uses the label **Result** instead of Intermediate Preview.
-- Preview and output frames use temporary local Blob URLs; they do not load PDF data from external URLs.
+- Preview pages are rendered to Canvas by the embedded PDF.js runtime; they do not load PDF data from external URLs.
 
-Preview display uses the browser's built-in inline PDF viewer. Chrome and Edge are the primary targets.
+Preview rendering no longer depends on the browser's built-in inline PDF viewer, so the standalone HTML also works when opened through Android's local `content://` file flow.
 
 ## Publish with GitHub Pages
 
@@ -144,7 +144,7 @@ The generated HTML is designed for fully local PDF processing after the file has
 
 - Content Security Policy includes `connect-src 'none'`.
 - Runtime `fetch`, `XMLHttpRequest`, and `WebSocket` are not used by the application.
-- Intermediate / Result previews use only local Blob PDF URLs, allowed by `frame-src blob:`.
+- Intermediate / Result previews are rendered locally to Canvas by the embedded PDF.js runtime.
 - Source PDF bytes stay in runtime memory and are not written into Pipeline JSON or Recipe storage.
 - Recipes are stored in this browser's `localStorage`; if persistent storage is unavailable, the app falls back to session memory and shows a warning.
 - The GitHub Pages version requires the initial HTML request, but selected PDF content is not transmitted by the app.
@@ -153,7 +153,6 @@ For use with the network completely disconnected, open the generated `dist/index
 
 ## Limitations
 
-- Preview display depends on the browser's built-in inline PDF viewer; Chrome and Edge are the primary supported targets.
 - Custom Watermark text is limited to ASCII characters because the app uses the embedded standard PDF font and does not embed custom Japanese fonts.
 - PDF editing can invalidate digital signatures.
 - Bookmarks, attachments, forms, signatures, outlines, and other document-level structures are not guaranteed to be preserved when pages are rebuilt into a new output PDF.
@@ -166,6 +165,7 @@ For use with the network completely disconnected, open the generated `dist/index
 | Library | Version | License | Purpose |
 | --- | ---: | --- | --- |
 | pdf-lib | 1.17.1 | MIT | Local PDF loading, page copying, transformation, document overlays, and output generation |
+| PDF.js | 6.2.108 | Apache-2.0 | Local Canvas rendering for intermediate and output PDF previews |
 | Node Editor Core | 1.0.0 | Project source | Graph editing, ports/edges, selection, viewport, Undo / Redo, MiniMap, and serialization |
 
 No dependency is loaded from a runtime CDN. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for details.
