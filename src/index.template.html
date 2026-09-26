@@ -56,20 +56,23 @@
         transform:none;opacity:1;visibility:visible;pointer-events:auto
       }
       .mobile-sheet-head{
-        position:sticky;top:0;z-index:3;display:grid;grid-template-columns:40px minmax(0,1fr) 40px;
-        align-items:center;min-height:54px;margin:0 -14px 10px;padding:6px 10px;
-        border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--surface) 96%,transparent);
+        position:sticky;top:0;z-index:3;display:flex;align-items:center;justify-content:center;
+        min-height:62px;margin:0 -14px 10px;padding:16px 56px 7px;
+        border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--surface) 98%,transparent);
         backdrop-filter:blur(12px)
       }
       .mobile-sheet-head::before{
-        content:"";width:34px;height:4px;justify-self:center;border-radius:999px;background:var(--line-strong)
+        content:"";position:absolute;left:50%;top:7px;transform:translateX(-50%);
+        width:36px;height:4px;border-radius:999px;background:var(--line-strong)
       }
-      .mobile-sheet-title{font-size:14px;font-weight:850;text-align:center}
-      .mobile-sheet-close{display:grid;place-items:center;width:40px;height:40px;padding:0;border:0;border-radius:10px;background:transparent;color:var(--muted)}
+      .mobile-sheet-head>span[aria-hidden="true"]{display:none}
+      .mobile-sheet-title{min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px;font-weight:850;line-height:1.25;text-align:center}
+      .mobile-sheet-close{position:absolute;right:9px;top:12px;display:grid;place-items:center;width:40px;height:40px;padding:0;border:0;border-radius:10px;background:transparent;color:var(--muted)}
       .mobile-sheet-close:hover{background:var(--surface-hover);color:var(--text)}
       .mobile-sheet-close svg{width:20px;height:20px}
       .palette .panel-title,.palette .panel-copy,.inspector>.panel-title,.inspector>.panel-copy{display:none}
-      .palette-groups{display:grid;gap:8px;min-width:0;padding-bottom:4px}
+      .palette{max-height:min(76dvh,700px)}
+      .palette-groups{display:grid;gap:8px;min-width:0;padding:0 0 10px}
       .palette-group{margin:0;padding:0 9px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
       .palette-group:first-child{border-top:1px solid var(--line)}
       .palette-group-toggle{min-height:44px;padding:8px 2px}
@@ -158,7 +161,7 @@
     <div class="canvas-backdrop" id="canvasBackdrop"></div>
     <div class="mobile-sheet-backdrop" id="mobileSheetBackdrop" aria-hidden="true"></div>
     <section class="mobile-tools-sheet" id="mobileToolsSheet" aria-label="その他の操作">
-      <div class="mobile-sheet-head"><span aria-hidden="true"></span><div class="mobile-sheet-title" data-i18n="mobileToolsSheet">その他の操作</div><button class="mobile-sheet-close" type="button" data-mobile-sheet-close aria-label="閉じる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+      <div class="mobile-sheet-head"><div class="mobile-sheet-title" data-i18n="mobileToolsSheet">その他の操作</div><button class="mobile-sheet-close" type="button" data-mobile-sheet-close aria-label="閉じる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
       <div class="mobile-tools-content">
         <section class="mobile-tools-group">
           <div class="mobile-tools-label" data-i18n="mobileViewGroup">表示</div>
@@ -192,7 +195,7 @@
       </div>
 
       <div class="editor-grid">
-        <aside class="panel palette"><div class="mobile-sheet-head"><span aria-hidden="true"></span><div class="mobile-sheet-title" data-i18n="mobileNodeSheet">ノードを追加</div><button class="mobile-sheet-close" type="button" data-mobile-sheet-close aria-label="閉じる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div><h2 class="panel-title" data-i18n="paletteTitle">ノード</h2><p class="panel-copy" data-i18n="paletteBody">クリック、またはドラッグしてCanvasへ追加します。</p><div class="palette-groups">
+        <aside class="panel palette"><div class="mobile-sheet-head"><div class="mobile-sheet-title" data-i18n="mobileNodeSheet">ノードを追加</div><button class="mobile-sheet-close" type="button" data-mobile-sheet-close aria-label="閉じる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div><h2 class="panel-title" data-i18n="paletteTitle">ノード</h2><p class="panel-copy" data-i18n="paletteBody">クリック、またはドラッグしてCanvasへ追加します。</p><div class="palette-groups">
           <section class="palette-group" data-palette-group><button class="palette-group-toggle" type="button" aria-expanded="true"><span data-i18n="inputOutputGroup">Input / Output</span><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m5 7 5 5 5-5"/></svg></button><div class="palette-group-body">
             <button class="node-add" type="button" draggable="true" data-add-node="pdf-input"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 3h7l4 4v14H7zM14 3v5h4"/></svg><span><strong data-i18n="nodeInput">PDF Input</strong><small data-i18n="nodeInputDesc">PDFファイルを読み込む</small></span></button>
             <button class="node-add" type="button" draggable="true" data-add-node="pdf-output"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 3h7l4 4v14H7zM14 3v5h4M9 15h6M12 12v6"/></svg><span><strong data-i18n="nodeOutput">PDF Output</strong><small data-i18n="nodeOutputDesc">PDFとして保存する</small></span></button>
@@ -218,11 +221,11 @@
 
         <section class="canvas-panel"><div id="canvas" class="canvas" aria-label="PDF Pipeline Canvas"></div><div class="canvas-overlay-status"><span class="status-dot" id="validationDot"></span><strong id="validationLabel">—</strong><span id="selectionLabel"></span></div></section>
 
-        <aside class="panel inspector"><div class="mobile-sheet-head"><span aria-hidden="true"></span><div class="mobile-sheet-title" data-i18n="mobileSettingsSheet">設定</div><button class="mobile-sheet-close" type="button" data-mobile-sheet-close aria-label="閉じる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div><h2 class="panel-title" data-i18n="inspectorTitle">設定</h2><p class="panel-copy" data-i18n="inspectorBody">ノードまたは接続を選択してください。</p><div id="inspectorContent" class="inspector-empty" data-i18n="inspectorEmpty">ノードを選択すると設定を編集できます。</div></aside>
+        <aside class="panel inspector"><div class="mobile-sheet-head"><div class="mobile-sheet-title" data-i18n="mobileSettingsSheet">設定</div><button class="mobile-sheet-close" type="button" data-mobile-sheet-close aria-label="閉じる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div><h2 class="panel-title" data-i18n="inspectorTitle">設定</h2><p class="panel-copy" data-i18n="inspectorBody">ノードまたは接続を選択してください。</p><div id="inspectorContent" class="inspector-empty" data-i18n="inspectorEmpty">ノードを選択すると設定を編集できます。</div></aside>
       </div>
 
       <div class="file-status-bar" id="fileStatusBar"><div class="file-status-section"><div class="file-status-label" data-i18n="inputFiles">入力PDF</div><div class="file-chip-list" id="inputFileList"></div></div><div class="file-status-section"><div class="file-status-label" data-i18n="outputFile">出力PDF</div><div class="file-chip-list" id="outputFileList"></div></div></div>
-      <div class="result-bar"><div class="mobile-sheet-head"><span aria-hidden="true"></span><div class="mobile-sheet-title" data-i18n="mobileResultSheet">実行結果</div><button class="mobile-sheet-close" type="button" data-mobile-sheet-close aria-label="閉じる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div><div class="result-copy"><div class="result-title" data-i18n="resultTitle">実行結果</div><div class="result-message" id="resultMessage">Pipelineを確認して「実行」を押してください。</div><div class="progress"><span id="progressBar"></span></div></div><div class="result-actions"><button class="tool-button" id="saveGraphButton" type="button" data-i18n="saveGraph">Pipeline保存</button><button class="tool-button" id="loadGraphButton" type="button" data-i18n="loadGraph">Pipelineを開く</button><input id="loadGraphInput" type="file" accept="application/json,.json" hidden><button class="tool-button" id="recipeButton" type="button" data-i18n="recipes">Recipe</button><button class="primary-button" id="runButton" type="button" data-i18n="run">Pipelineを実行</button><button class="primary-button" id="savePdfButton" type="button" data-i18n="savePdf" disabled>PDFを保存</button></div></div>
+      <div class="result-bar"><div class="mobile-sheet-head"><div class="mobile-sheet-title" data-i18n="mobileResultSheet">実行結果</div><button class="mobile-sheet-close" type="button" data-mobile-sheet-close aria-label="閉じる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div><div class="result-copy"><div class="result-title" data-i18n="resultTitle">実行結果</div><div class="result-message" id="resultMessage">Pipelineを確認して「実行」を押してください。</div><div class="progress"><span id="progressBar"></span></div></div><div class="result-actions"><button class="tool-button" id="saveGraphButton" type="button" data-i18n="saveGraph">Pipeline保存</button><button class="tool-button" id="loadGraphButton" type="button" data-i18n="loadGraph">Pipelineを開く</button><input id="loadGraphInput" type="file" accept="application/json,.json" hidden><button class="tool-button" id="recipeButton" type="button" data-i18n="recipes">Recipe</button><button class="primary-button" id="runButton" type="button" data-i18n="run">Pipelineを実行</button><button class="primary-button" id="savePdfButton" type="button" data-i18n="savePdf" disabled>PDFを保存</button></div></div>
     </section>
     <nav class="mobile-action-bar" id="mobileActionBar" aria-label="Pipeline actions">
       <button class="mobile-action-button" id="mobileAddButton" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="mobileAdd">追加</span></button>
