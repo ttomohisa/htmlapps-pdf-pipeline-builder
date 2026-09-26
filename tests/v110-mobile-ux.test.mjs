@@ -33,6 +33,9 @@ test('v1.1.0 adds a canvas-first mobile workspace without changing desktop marku
   assert.match(source,/@media\(max-width:760px\)/);
   assert.match(source,/grid-template-columns:repeat\(5,minmax\(0,1fr\)\)/);
   assert.match(source,/connect-src 'none'/);
+  assert.match(source,/introTitle:'PDF処理をつないで組み立てる'/);
+  assert.doesNotMatch(source,/PDF処理を、つないで組み立てる/);
+  assert.match(source,/PDF処理をノードで組み、途中結果を確認しながら実行できます。/);
 });
 
 test('mobile sheets remain dismissible and the primary action exposes generated results',()=>{
@@ -43,6 +46,11 @@ test('mobile sheets remain dismissible and the primary action exposes generated 
   assert.match(source,/if\(outputBytes\)\{openMobileSheet\('result'\)/);
   assert.match(source,/function setExpanded\(expanded\)\{[^}]*closeMobileSheets\(\)/);
   assert.match(source,/mobileExpandButton'\)\.onclick=\(\)=>setExpanded/);
+  assert.match(source,/canvasElement\.addEventListener\('pointerdown',[\s\S]*?,true\);/);
+  assert.match(source,/canvasElement\.addEventListener\('pointerup',[\s\S]*?,true\);/);
+  assert.match(source,/\.nec-port,\.nec-node-toolbar/);
+  assert.match(source,/M5 4v8a7 7 0 0 0 14 0V4/);
+  assert.match(source,/M7 7v4M10 7v2\.5M13 7v4M16 7v2\.5/);
   assert.match(source,/\.workspace-toolbar\{display:none!important\}/);
   assert.match(source,/mobileResult:'結果'/);
   assert.match(source,/mobileResult:'Result'/);
