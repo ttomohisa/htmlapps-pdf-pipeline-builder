@@ -23,7 +23,7 @@ GitHub Pages delivers the initial HTML. After it loads, selected PDFs, intermedi
 - **Reuse saved Recipes quickly** — Save a Pipeline as a browser-local Recipe, attach new PDFs above the editor, then either apply it to the Canvas for editing or generate an output preview without replacing the current Canvas.
 - **Branch and combine page streams** — Split a stream into Selected / Rest and Merge 2–6 inputs in a defined order.
 - **Add document finishing steps** — Insert page numbers, text watermarks, and preset text stamps at the exact point where they should affect the Pipeline.
-- **Edit comfortably on desktop and mobile** — Click or drag nodes from the palette, collapse palette groups, use Undo / Redo, Pan / Zoom / Fit, MiniMap, helper lines, Grid snap, and the enlarged workspace.
+- **Edit comfortably on desktop and mobile** — Desktop keeps the three-column editor, while mobile centers the Canvas and moves node adding, settings, secondary tools, and results into bottom sheets with a fixed action bar.
 - **Private, single-HTML operation** — `pdf-lib` and Node Editor Core are embedded, runtime network access is blocked, and source/generated PDF bytes are not stored in Pipeline JSON or Recipes.
 
 ## Quick start
@@ -154,7 +154,7 @@ For use with the network completely disconnected, open the generated `dist/index
 ## Limitations
 
 - Preview display depends on the browser's built-in inline PDF viewer; Chrome and Edge are the primary supported targets.
-- Custom Watermark text is limited to ASCII characters because v1.0.0 uses the embedded standard PDF font and does not embed custom Japanese fonts.
+- Custom Watermark text is limited to ASCII characters because the app uses the embedded standard PDF font and does not embed custom Japanese fonts.
 - PDF editing can invalidate digital signatures.
 - Bookmarks, attachments, forms, signatures, outlines, and other document-level structures are not guaranteed to be preserved when pages are rebuilt into a new output PDF.
 - Large PDFs and complex multi-branch Pipelines can consume substantial device memory because processing is fully local.
