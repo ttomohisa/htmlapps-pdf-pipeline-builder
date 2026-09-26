@@ -266,9 +266,13 @@
       bytes(dependencyId,assetKey){const asset=getEmbeddedAsset(dependencyId,assetKey);if(asset.compression&&asset.compression!=='none')throw new Error(`Embedded asset ${dependencyId}/${assetKey} is gzip-compressed; use await StandaloneAssets.bytesAsync().`);return decodeBase64Bytes(asset.base64)},
       async bytesAsync(dependencyId,assetKey){const cacheKey=`${dependencyId}/${assetKey}`;if(!assetByteCache.has(cacheKey))assetByteCache.set(cacheKey,inflateEmbeddedAsset(getEmbeddedAsset(dependencyId,assetKey)));return new Uint8Array(await assetByteCache.get(cacheKey))},
       async blobUrlAsync(dependencyId,assetKey){const asset=getEmbeddedAsset(dependencyId,assetKey),url=URL.createObjectURL(new Blob([await this.bytesAsync(dependencyId,assetKey)],{type:asset.mime||'application/octet-stream'}));embeddedBlobUrls.add(url);return url},
-      async loadClassicScript(dependencyId,assetKey,globalName=''){const sourceUrl=await this.blobUrlAsync(dependencyId,assetKey);try{await new Promise((resolve,reject)=>{const script=document.createElement('script');script.src=sourceUrl;script.onload=resolve;script.onerror=()=>reject(new Error(`Failed to load embedded script: ${dependencyId}/${assetKey}`));document.head.append(script)});return globalName?window[globalName]:true}finally{URL.revokeObjectURL(sourceUrl);embeddedBlobUrls.delete(sourceUrl)}}
+      async loadClassicScript(dependencyId,assetKey,globalName=''){const sourceUrl=await this.blobUrlAsync(dependencyId,assetKey);try{await new Promise((resolve,reject)=>{const script=document.createElement('script');script.src=sourceUrl;script.onload=resolve;script.onerror=()=>reject(new Error(`Failed to load embedded script: ${dependencyId}/${assetKey}`));document.head.append(script)});return globalName?window[globalName]:true}finally{URL.revokeObjectURL(sourceUrl);embeddedBlobUrls.delete(sourceUrl)}},
+      async importModule(dependencyId,assetKey){const sourceUrl=await this.blobUrlAsync(dependencyId,assetKey);try{return await import(sourceUrl)}finally{URL.revokeObjectURL(sourceUrl);embeddedBlobUrls.delete(sourceUrl)}}
     });
     window.addEventListener('pagehide',()=>{embeddedBlobUrls.forEach(url=>URL.revokeObjectURL(url));embeddedBlobUrls.clear()});
+    if(typeof Promise.withResolvers!=='function'){Promise.withResolvers=function(){let resolve,reject;const promise=new Promise((res,rej)=>{resolve=res;reject=rej});return{promise,resolve,reject}}}
+    if(typeof Map.prototype.getOrInsertComputed!=='function'){Object.defineProperty(Map.prototype,'getOrInsertComputed',{configurable:true,writable:true,value(key,callback){if(this.has(key))return this.get(key);const value=callback(key);this.set(key,value);return value}})}
+    if(typeof Math.sumPrecise!=='function'){Object.defineProperty(Math,'sumPrecise',{configurable:true,writable:true,value(values){let sum=0,compensation=0;for(const value of values){const next=sum+value;compensation+=Math.abs(sum)>=Math.abs(value)?(sum-next)+value:(value-next)+sum;sum=next}return sum+compensation}})}
     await window.StandaloneAssets.loadClassicScript('pdf-lib','runtime','PDFLib');
     const Core=globalThis.NodeEditorCore;
     const PDFLib=globalThis.PDFLib;
@@ -285,8 +289,17 @@
     let language=(navigator.language||'').toLowerCase().startsWith('ja')?'ja':'en';
     let toastTimer=0;
     let previewRequestId=0;
-    let outputPreviewUrl=null;
-    let previewBlobUrls=[];
+    let largePreviewRequestId=0;
+    let pdfjsModule=null;
+    let outputPreviewLoadingTask=null;
+    let outputPreviewDoc=null;
+    let outputPreviewRenderTask=null;
+    let outputPreviewPage=1;
+    const PDFJS_CMAP_ASSETS={'UniJIS-UCS2-H.bcmap':'cmap-unijis-ucs2-h','Adobe-Japan1-UCS2.bcmap':'cmap-adobe-japan1-ucs2'};
+    class EmbeddedPdfBinaryDataFactory{async fetch({kind,filename}={}){if(kind!=='cMapUrl')throw new Error(`Embedded PDF.js resource is unavailable: ${kind||'unknown'}/${filename||'unknown'}`);const assetKey=PDFJS_CMAP_ASSETS[filename];if(!assetKey||!StandaloneAssets.has('pdfjs',assetKey))throw new Error(`Embedded PDF.js CMap is unavailable: ${filename||'unknown'}`);return StandaloneAssets.bytesAsync('pdfjs',assetKey)}}
+    async function ensurePdfJs(){if(pdfjsModule)return pdfjsModule;if(!StandaloneAssets.has('pdfjs','main')||!StandaloneAssets.has('pdfjs','worker'))throw new Error('Embedded PDF.js is unavailable.');const workerModule=await StandaloneAssets.importModule('pdfjs','worker');if(!workerModule?.WorkerMessageHandler)throw new Error('Embedded PDF.js worker did not initialize.');globalThis.pdfjsWorker={WorkerMessageHandler:workerModule.WorkerMessageHandler};const module=await StandaloneAssets.importModule('pdfjs','main');module.GlobalWorkerOptions.workerPort=null;pdfjsModule=module;return module}
+    async function openPdfJsDocument(bytes){const pdfjs=await ensurePdfJs();const loadingTask=pdfjs.getDocument({data:new Uint8Array(bytes),isEvalSupported:false,enableScripting:false,useWorkerFetch:false,useSystemFonts:true,cMapUrl:'embedded://pdfjs-cmaps/',cMapPacked:true,BinaryDataFactory:EmbeddedPdfBinaryDataFactory});return{loadingTask,doc:await loadingTask.promise}}
+    async function renderPdfBytesToCanvas(bytes,canvas,{targetWidth=260,fitContainer=false}={}){const opened=await openPdfJsDocument(bytes);try{const page=await opened.doc.getPage(1),base=page.getViewport({scale:1}),scale=Math.max(.12,Math.min(3,Math.max(120,targetWidth)/base.width)),viewport=page.getViewport({scale}),outputScale=Math.max(1,Math.min(2.5,window.devicePixelRatio||1.5));canvas.width=Math.max(1,Math.floor(viewport.width*outputScale));canvas.height=Math.max(1,Math.floor(viewport.height*outputScale));canvas.style.width=fitContainer?'100%':`${viewport.width}px`;canvas.style.height=fitContainer?'100%':`${viewport.height}px`;const ctx=canvas.getContext('2d',{alpha:false}),transform=outputScale!==1?[outputScale,0,0,outputScale,0,0]:undefined;await page.render({canvasContext:ctx,viewport,transform,background:'rgb(255,255,255)'}).promise;return{width:viewport.width,height:viewport.height}}finally{await opened.loadingTask.destroy().catch(()=>{})}}
     const previewPortByNode=new Map();
     const previewOffsetByKey=new Map();
     const PREVIEW_PAGE_SIZE=6;
