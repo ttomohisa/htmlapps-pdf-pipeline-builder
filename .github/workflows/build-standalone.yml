@@ -38,15 +38,22 @@ jobs:
         shell: pwsh
         run: ./scripts/check-repository.ps1
 
+      - name: Measure standalone HTML
+        id: size
+        shell: pwsh
+        run: |
+          $bytes = (Get-Item ./dist/index.html).Length
+          "bytes=$bytes" >> $env:GITHUB_OUTPUT
+          Write-Host "Standalone HTML: $bytes bytes"
+
       - name: Upload standalone artifact
         uses: actions/upload-artifact@v7
         with:
-          name: standalone-html-${{ github.event.pull_request.head.sha || github.sha }}
+          name: standalone-html-${{ github.event.pull_request.head.sha || github.sha }}-${{ steps.size.outputs.bytes }}b
           path: |
             dist/index.html
-            dist/index.self-extract.html
             dist/dependency-manifest.json
-            dist/self-extract-manifest.json
+            dist/build-size-report.json
             dist/.nojekyll
           if-no-files-found: error
           retention-days: 14
