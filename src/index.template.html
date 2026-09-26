@@ -515,7 +515,34 @@
     function closePreviewDialog(){largePreviewRequestId++;const dialog=$('#previewDialog'),canvas=$('#previewDialogCanvas');if(dialog?.open)dialog.close();if(canvas){const ctx=canvas.getContext('2d');ctx?.clearRect(0,0,canvas.width,canvas.height);canvas.width=canvas.height=1;canvas.style.width='1px';canvas.style.height='1px'}if($('#previewDialogMeta'))$('#previewDialogMeta').textContent=''}
     async function openLargePreview(bytes,page,isResult=false){const dialog=$('#previewDialog'),canvas=$('#previewDialogCanvas'),wrap=$('#previewDialogCanvasWrap');if(!dialog||!canvas||!wrap)return;const requestId=++largePreviewRequestId,titleKey=isResult?'resultPreviewLargeTitle':'previewLargeTitle';$('#previewDialogTitle').textContent=t(titleKey);$('#previewDialogMeta').textContent=t('previewPageLabel',{page});canvas.setAttribute('aria-label',`${t(titleKey)} · ${t('previewPageLabel',{page})}`);dialog.showModal();await new Promise(resolve=>requestAnimationFrame(resolve));if(requestId!==largePreviewRequestId||!dialog.open)return;try{const targetWidth=Math.max(260,Math.min(980,(wrap.clientWidth||window.innerWidth)-28));await renderPdfBytesToCanvas(bytes,canvas,{targetWidth});if(requestId!==largePreviewRequestId)return;wrap.scrollTo({top:0,left:0})}catch(error){console.error(error);if(requestId===largePreviewRequestId)showToast(t('previewFailed',{message:error?.message||String(error)}),true)}}
     async function closeOutputPreview(){outputPreviewRequestId++;try{outputPreviewRenderTask?.cancel?.()}catch{}outputPreviewRenderTask=null;const loadingTask=outputPreviewLoadingTask;outputPreviewLoadingTask=null;outputPreviewDoc=null;if(loadingTask)await loadingTask.destroy().catch(()=>{});const dialog=$('#outputPreviewDialog'),canvas=$('#outputPreviewCanvas');if(dialog?.open)dialog.close();if(canvas){const ctx=canvas.getContext('2d');ctx?.clearRect(0,0,canvas.width,canvas.height);canvas.width=canvas.height=1;canvas.style.width='1px';canvas.style.height='1px'}}
-    async function renderOutputPreviewPage(pageNumber){if(!outputPreviewDoc)return;const requestId=++outputPreviewRequestId;try{outputPreviewRenderTask?.cancel?.()}catch{}const pageCount=outputPreviewDoc.numPages;outputPreviewPage=Math.max(1,Math.min(pageCount,Math.trunc(Number(pageNumber)||1)));const page=await outputPreviewDoc.getPage(outputPreviewPage);if(requestId!==outputPreviewRequestId)return;const wrap=$('#outputPreviewCanvasWrap'),canvas=$('#outputPreviewCanvas'),base=page.getViewport({scale:1}),availableWidth=Math.max(240,(wrap?.clientWidth||window.innerWidth)-28),scale=Math.max(.2,Math.min(2.5,availableWidth/base.width)),viewport=page.getViewport({scale}),outputScale=Math.max(1,Math.min(2.5,window.devicePixelRatio||1.5));canvas.width=Math.max(1,Math.floor(viewport.width*outputScale));canvas.height=Math.max(1,Math.floor(viewport.height*outputScale));canvas.style.width=`${viewport.width}px`;canvas.style.height=`${viewport.height}px`;const ctx=canvas.getContext('2d',{alpha:false}),transform=outputScale!==1?[outputScale,0,0,outputScale,0,0]:undefined;outputPreviewRenderTask=page.render({canvasContext:ctx,viewport,transform,background:'rgb(255,255,255)'});await outputPreviewRenderTask.promise;if(requestId!==outputPreviewRequestId)return;$('#outputPreviewPageLabel').textContent=`${outputPreviewPage} / ${pageCount}`;$('#outputPreviewPrevButton').disabled=outputPreviewPage<=1;$('#outputPreviewNextButton').disabled=outputPreviewPage>=pageCount;wrap?.scrollTo({top:0,left:0})}catch(error){if(error?.name==='RenderingCancelledException'||error?.name==='AbortException')return;console.error(error);showToast(t('previewFailed',{message:error?.message||String(error)}),true)}}
+    async function renderOutputPreviewPage(pageNumber){
+      if(!outputPreviewDoc)return;
+      const requestId=++outputPreviewRequestId;
+      try{
+        try{outputPreviewRenderTask?.cancel?.()}catch{}
+        const pageCount=outputPreviewDoc.numPages;
+        outputPreviewPage=Math.max(1,Math.min(pageCount,Math.trunc(Number(pageNumber)||1)));
+        const page=await outputPreviewDoc.getPage(outputPreviewPage);
+        if(requestId!==outputPreviewRequestId)return;
+        const wrap=$('#outputPreviewCanvasWrap'),canvas=$('#outputPreviewCanvas'),base=page.getViewport({scale:1}),availableWidth=Math.max(240,(wrap?.clientWidth||window.innerWidth)-28),scale=Math.max(.2,Math.min(2.5,availableWidth/base.width)),viewport=page.getViewport({scale}),outputScale=Math.max(1,Math.min(2.5,window.devicePixelRatio||1.5));
+        canvas.width=Math.max(1,Math.floor(viewport.width*outputScale));
+        canvas.height=Math.max(1,Math.floor(viewport.height*outputScale));
+        canvas.style.width=`${viewport.width}px`;
+        canvas.style.height=`${viewport.height}px`;
+        const ctx=canvas.getContext('2d',{alpha:false}),transform=outputScale!==1?[outputScale,0,0,outputScale,0,0]:undefined;
+        outputPreviewRenderTask=page.render({canvasContext:ctx,viewport,transform,background:'rgb(255,255,255)'});
+        await outputPreviewRenderTask.promise;
+        if(requestId!==outputPreviewRequestId)return;
+        $('#outputPreviewPageLabel').textContent=`${outputPreviewPage} / ${pageCount}`;
+        $('#outputPreviewPrevButton').disabled=outputPreviewPage<=1;
+        $('#outputPreviewNextButton').disabled=outputPreviewPage>=pageCount;
+        wrap?.scrollTo({top:0,left:0});
+      }catch(error){
+        if(error?.name==='RenderingCancelledException'||error?.name==='AbortException')return;
+        console.error(error);
+        showToast(t('previewFailed',{message:error?.message||String(error)}),true);
+      }
+    }
     async function openOutputPreview(bytes,filename,pageCount){await closeOutputPreview();$('#outputPreviewMeta').textContent=`${filename} · ${pageCount} ${t('pageUnit')} · ${formatBytes(bytes.length)}`;$('#outputPreviewPrevButton').setAttribute('aria-label',t('previewPrevious'));$('#outputPreviewNextButton').setAttribute('aria-label',t('previewNext'));const dialog=$('#outputPreviewDialog');dialog.showModal();try{const opened=await openPdfJsDocument(bytes);outputPreviewLoadingTask=opened.loadingTask;outputPreviewDoc=opened.doc;outputPreviewPage=1;await renderOutputPreviewPage(1)}catch(error){console.error(error);showToast(t('previewFailed',{message:error?.message||String(error)}),true)}}
     function previewPortsForNode(node){if(node.type==='split-pages')return[{id:'selected',labelKey:'previewSelected'},{id:'rest',labelKey:'previewRest'}];if(node.type==='pdf-input')return[{id:'pages'}];if(node.type==='pdf-output')return[{id:'in'}];return[{id:'out'}]}
     function previewErrorKey(error){const message=String(error?.message||'');if(message.startsWith('PREVIEW_FILE:'))return'previewNeedFile';if(message.startsWith('PREVIEW_EDGE:'))return'previewMissingConnection';return''}
