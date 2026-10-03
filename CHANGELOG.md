@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Escape imported PDF Input page-count metadata in the Inspector so HTML-looking values remain inert display text. Preserve existing saved graphs and numeric page-count displays.
+
 ## 1.0.0 - 2026-09-15
 
 - Promoted the validated v0.9.0 release candidate to the first stable PDF Pipeline Builder release.
