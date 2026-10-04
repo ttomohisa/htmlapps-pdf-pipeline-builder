@@ -1,3 +1,4 @@
+import { assertNoNetworkCalls } from './helpers/runtime-contract.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -38,6 +39,6 @@ test('Recipe library still supports loading a Recipe into the Canvas for editing
 });
 
 test('v0.8.2 quick Recipe remains local and app-specific',()=>{
-  assert.doesNotMatch(template,/\bfetch\s*\(|XMLHttpRequest|new\s+WebSocket\s*\(/);
+  assertNoNetworkCalls(template);
   assert.doesNotMatch(core,/runQuickRecipe|quick-recipe-card|quickRecipeExpand/);
 });

@@ -2,9 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import os from 'node:os';
 import vm from 'node:vm';
-import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
@@ -92,18 +90,19 @@ test('materializer writes page number, watermark, and bordered stamp into local 
     {type:'stamp',text:'DRAFT',position:'top-right',fontSize:16,margin:24,opacity:.85,rotation:0},
   ]}];
   const bytes=await vm.runInContext(`materializePageRefs(refs,async()=>{throw new Error('not needed')})`,ctx);
-  const output=path.join(os.tmpdir(),`pdf-pipeline-v060-${process.pid}.pdf`);
-  const textFile=output+'.txt';
-  try{
-    fs.writeFileSync(output,Buffer.from(bytes));
-    execFileSync('pdftotext',[output,textFile]);
-    const text=fs.readFileSync(textFile,'utf8');
-    assert.match(text,/1\s*\/\s*1/);
-    assert.match(text,/CONFIDENTIAL/);
-    assert.match(text,/DRAFT/);
-  } finally {
-    fs.rmSync(output,{force:true});fs.rmSync(textFile,{force:true});
+  const out=await ctx.PDFLib.PDFDocument.load(bytes);
+  assert.equal(out.getPageCount(),1);
+  const contents=out.getPage(0).node.Contents();
+  const operators=Array.from({length:contents.size()},(_,i)=>{
+    const stream=out.context.lookup(contents.get(i));
+    return Buffer.from(ctx.PDFLib.decodePDFRawStream(stream).decode()).toString('latin1');
+  }).join('\n');
+  for(const text of ['1 / 1','CONFIDENTIAL','DRAFT']){
+    const hex=Buffer.from(text).toString('hex');
+    assert.match(operators,new RegExp('<'+hex+'>\\s*Tj','i'),text+' must be painted into the output');
   }
+  assert.match(operators,/\bS\b/,'stamp border must be stroked');
+  assert.match(operators,/\bh\b/,'stamp border path must close');
 });
 
 test('watermark input rejects non-ASCII text instead of corrupting output',()=>{

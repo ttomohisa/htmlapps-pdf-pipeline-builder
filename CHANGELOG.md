@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Repair stale test expectations for current PDF.js canvas previews, release metadata, and canonical embedded-asset/self-extract manifests. Verify local CMap resolution and unsupported-resource rejection; keep network-call detection active inside the resource factory.
+- Inspect generated PDF text operators and the stamp border directly, removing the test-only requirement for an unconfigured `pdftotext` executable. Fix the malformed template-script parsing regex.
+
 - Escape imported PDF Input page-count metadata in the Inspector so HTML-looking values remain inert display text. Preserve existing saved graphs and numeric page-count displays.
 
 ## 1.0.0 - 2026-09-15

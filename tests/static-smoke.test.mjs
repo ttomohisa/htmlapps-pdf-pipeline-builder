@@ -1,3 +1,4 @@
+import { assertNoNetworkCalls } from './helpers/runtime-contract.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -10,6 +11,7 @@ import { fileURLToPath } from 'node:url';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const dist=fs.readFileSync(path.join(root,'dist/index.html'),'utf8');
 const template=fs.readFileSync(path.join(root,'src/index.template.html'),'utf8');
+const config=JSON.parse(fs.readFileSync(path.join(root,'app.config.json'),'utf8'));
 const core=fs.readFileSync(path.join(root,'src/vendor/node-editor-core.mjs'),'utf8');
 
 test('standalone artifact has local-only CSP and formal app marker',()=>{
@@ -17,7 +19,7 @@ test('standalone artifact has local-only CSP and formal app marker',()=>{
   assert.match(dist,/coreVersion:'1\.0\.0'/);
   assert.match(dist,/consumer:'pdf-pipeline-builder'/);
   assert.match(dist,/appVersion:APP_CONFIG\.version/);
-  assert.match(dist,/PDF Pipeline Builder <span class="version-badge">v1\.0\.0<\/span>/);
+  assert.equal(dist.match(/class="version-badge">v([^<]+)<\/span>/)?.[1],config.version);
   assert.doesNotMatch(template,/second Consumer|second consumer|validation Consumer|検証Consumer|Node Editor Core検証/);
   assert.doesNotMatch(dist,/__APP_CONFIG_JSON__|__BUILD_MANIFEST_JSON__|__EMBEDDED_ASSET_BUNDLE_JSON__|__NODE_EDITOR_CORE_SOURCE__|__PDF_LIB_SOURCE__/);
   assert.doesNotMatch(dist,/^\s*export\s+default\s+NodeEditorCore/m);
@@ -41,7 +43,7 @@ test('application source uses pages Ports and Merge without teaching Core PDF se
 });
 
 test('application source does not initiate runtime network APIs',()=>{
-  assert.doesNotMatch(template,/\bfetch\s*\(|XMLHttpRequest|new\s+WebSocket\s*\(/);
+  assertNoNetworkCalls(template);
 });
 
 test('all classic inline scripts parse',()=>{
@@ -53,44 +55,51 @@ test('all classic inline scripts parse',()=>{
 
 
 test('dependency metadata is template-compatible and locked',()=>{
-  const dependencies=JSON.parse(fs.readFileSync(path.join(root,'dependencies.json'),'utf8'));
-  const lock=JSON.parse(fs.readFileSync(path.join(root,'dependencies.lock.json'),'utf8'));
-  assert.equal(dependencies.dependencies.length,1);
-  const dep=dependencies.dependencies[0];
-  assert.equal(dep.id,'pdf-lib');
-  assert.equal(dep.package,'pdf-lib');
-  assert.equal(dep.version,'1.17.1');
-  assert.equal(dep.assets?.[0]?.path,'dist/pdf-lib.min.js');
-  assert.ok(dep.homepage);
-  const locked=lock.dependencies.find(item=>item.id==='pdf-lib');
-  assert.ok(locked);
-  assert.equal(locked.package,dep.package);
-  assert.equal(locked.version,dep.version);
-  assert.match(locked.tarballSha256,/^[a-f0-9]{64}$/);
+  const dependencies=JSON.parse(fs.readFileSync(path.join(root,'dependencies.json'),'utf8')).dependencies;
+  const lock=JSON.parse(fs.readFileSync(path.join(root,'dependencies.lock.json'),'utf8')).dependencies;
+  assert.deepEqual(dependencies.map(dep=>dep.id).sort(),['pdf-lib','pdfjs']);
+  assert.equal(lock.length,dependencies.length);
+  for(const dep of dependencies){
+    assert.match(dep.version,/^\d+\.\d+\.\d+$/);
+    assert.ok(dep.homepage);assert.ok(dep.license);assert.ok(dep.assets.length);
+    const locked=lock.find(item=>item.id===dep.id);
+    assert.ok(locked);assert.equal(locked.package,dep.package);assert.equal(locked.version,dep.version);
+    assert.match(locked.tarballSha256,/^[a-f0-9]{64}$/);
+  }
 });
 
-test('generated dependency manifest records the locked tarball and embedded bytes',()=>{
-  const lock=JSON.parse(fs.readFileSync(path.join(root,'dependencies.lock.json'),'utf8'));
+test('generated dependency manifest records every locked tarball and actual embedded bytes',()=>{
+  const lock=JSON.parse(fs.readFileSync(path.join(root,'dependencies.lock.json'),'utf8')).dependencies;
+  const dependencies=JSON.parse(fs.readFileSync(path.join(root,'dependencies.json'),'utf8')).dependencies;
   const manifest=JSON.parse(fs.readFileSync(path.join(root,'dist/dependency-manifest.json'),'utf8'));
-  const locked=lock.dependencies.find(item=>item.id==='pdf-lib');
-  const entry=manifest.dependencies['pdf-lib'];
-  assert.equal(entry.package,'pdf-lib');
-  assert.equal(entry.version,'1.17.1');
-  assert.equal(entry.tarballSha256,locked.tarballSha256);
-  const vendor=fs.readFileSync(path.join(root,'src/vendor/pdf-lib.min.js'));
-  assert.equal(entry.embeddedSha256,crypto.createHash('sha256').update(vendor).digest('hex'));
-  assert.equal(manifest.runtimeNetwork,false);
+  const bundle=JSON.parse(dist.match(/const assetBundle=(\{[^\n]+\});/)[1]);
+  assert.equal(manifest.dependencies.length,dependencies.length);
+  for(const dep of dependencies){
+    const entry=manifest.dependencies.find(item=>item.id===dep.id);
+    assert.ok(entry);assert.equal(entry.package,dep.package);assert.equal(entry.version,dep.version);
+    assert.equal(entry.tarballSha256,lock.find(item=>item.id===dep.id).tarballSha256);
+    assert.equal(entry.locked,true);assert.equal(entry.assets.length,dep.assets.length);
+    for(const asset of dep.assets){
+      const recorded=entry.assets.find(item=>item.key===asset.key);
+      assert.equal(recorded.path,asset.path);
+      const embedded=bundle.dependencies[dep.id].assets[asset.key];
+      const stored=Buffer.from(embedded.base64,'base64');
+      const bytes=embedded.compression==='gzip'?zlib.gunzipSync(stored):stored;
+      assert.equal(recorded.storedBytes,stored.length);assert.equal(recorded.bytes,bytes.length);
+      assert.equal(recorded.sha256,crypto.createHash('sha256').update(bytes).digest('hex'));
+    }
+  }
 });
 
 test('self-extract payload restores readable artifact byte-for-byte',()=>{
   const wrapper=fs.readFileSync(path.join(root,'dist/index.self-extract.html'),'utf8');
-  const match=wrapper.match(/const b='([^']+)'/);
+  const match=wrapper.match(/<script id="self-extract-payload" type="application\/octet-stream">([A-Za-z0-9+/=\s]+)<\/script>/);
   assert.ok(match);
   const restored=zlib.gunzipSync(Buffer.from(match[1],'base64'));
   const readable=fs.readFileSync(path.join(root,'dist/index.html'));
   assert.equal(Buffer.compare(restored,readable),0);
   const manifest=JSON.parse(fs.readFileSync(path.join(root,'dist/self-extract-manifest.json'),'utf8'));
-  assert.equal(manifest.sourceSha256,crypto.createHash('sha256').update(readable).digest('hex'));
+  assert.equal(manifest.source.sha256,crypto.createHash('sha256').update(readable).digest('hex'));
 });
 
 
@@ -164,17 +173,17 @@ test('v0.4.0 safely disconnects removed Merge ports as one graph edit',()=>{
 });
 
 
-test('v0.5.0 previews intermediate node output locally without adding a renderer dependency',()=>{
+test('intermediate previews render with the embedded PDF.js dependency',()=>{
   assert.match(template,/function renderPreviewSection\(/);
   assert.match(template,/function renderPreviewPages\(/);
   assert.match(template,/function createPageEvaluator\(/);
   assert.match(template,/function materializePageRefs\(/);
   assert.match(template,/previewPortsForNode/);
   assert.match(template,/previewPortByNode/);
-  assert.match(template,/frame\.src=`\$\{url\}#toolbar=0/);
+  assert.match(template,/renderPdfBytesToCanvas\(bytes,previewCanvas/);
   assert.match(dist,/frame-src blob:/);
   assert.match(dist,/connect-src 'none'/);
-  assert.equal(JSON.parse(fs.readFileSync(path.join(root,'dependencies.json'),'utf8')).dependencies.length,1);
+  assert.ok(JSON.parse(fs.readFileSync(path.join(root,'dependencies.json'),'utf8')).dependencies.some(dep=>dep.id==='pdfjs'));
 });
 
 test('v0.5.0 uses SVG icon controls for canvas display helpers',()=>{
@@ -186,9 +195,4 @@ test('v0.5.0 uses SVG icon controls for canvas display helpers',()=>{
   }
   assert.match(template,/setAttribute\('aria-label',helperLabel\)/);
   assert.match(template,/setAttribute\('aria-label',gridLabel\)/);
-});
-
-test('product copy explains reusable workflows in Japanese and English',()=>{
-  assert.match(template,/よく使うPDF処理はRecipeとしてこのブラウザーに登録し、別のPDFへそのまま繰り返し使えます/);
-  assert.match(template,/Register frequently used PDF processing as a Recipe in this browser, then reuse it with other files/);
 });

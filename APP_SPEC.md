@@ -1,4 +1,4 @@
-# PDF Pipeline Builder v1.0.0 — Application Specification
+# PDF Pipeline Builder v1.1.0 — Application Specification
 
 ## 1.0.0 Stable release
 
@@ -194,9 +194,9 @@ Endpoint rules:
 
 Preview pages are materialized from the same page-reference model and `pdf-lib` materializer used by final execution, including Page Numbers, Watermark, and Text Stamp overlays. Six pages are displayed at a time with Previous / Next navigation.
 
-Each visible page becomes a temporary one-page PDF Blob displayed by the browser's built-in inline PDF viewer. Blob URLs are revoked when Preview is replaced or invalidated. Preview bytes never enter Pipeline JSON.
+Each visible page is materialized as a one-page PDF and rendered to a local canvas by embedded PDF.js 6.2.108. Enlarged previews use those same PDF bytes; output preview provides local page navigation. Preview bytes never enter Pipeline JSON.
 
-No preview renderer dependency is included. CSP remains network-closed while allowing only `frame-src blob:` for local Preview frames.
+PDF.js and its worker module are loaded from embedded assets. The embedded binary-resource factory serves only the two bundled Japanese CMaps and rejects unsupported resources without fetching. PDF scripting/eval and worker fetch are disabled. CSP retains `connect-src 'none'`; the existing `frame-src blob:` permission remains for compatibility.
 
 ## 6. File management
 
@@ -251,11 +251,11 @@ PDF-specific page expressions, Split semantics, Merge ordering, page-reference r
 
 - `connect-src 'none'`
 - `frame-src blob:` only for local intermediate-preview PDFs
-- no fetch / XHR / WebSocket at runtime
+- no network fetch / XHR / WebSocket at runtime; the PDF.js binary-resource interface named `fetch` reads embedded bytes only
 - no runtime CDN
 - no PDF upload
 - no telemetry
-- embedded `pdf-lib` 1.17.1
+- embedded `pdf-lib` 1.17.1 and `pdfjs-dist` 6.2.108
 
 ## 10. Mobile
 
@@ -274,7 +274,7 @@ PDF-specific page expressions, Split semantics, Merge ordering, page-reference r
 
 Not yet included:
 
-- dedicated canvas-based PDF renderer / PDF.js dependency
+- additional PDF rendering dependencies beyond the embedded PDF.js runtime
 - multiple independent PDF Output files from one execution
 - split-to-many automatic file generation
 - custom blank-page size

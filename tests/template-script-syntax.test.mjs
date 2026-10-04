@@ -9,7 +9,7 @@ const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const source=fs.readFileSync(path.join(root,'src/index.template.html'),'utf8');
 
 test('all inline scripts in the application template are syntactically valid',()=>{
-  const scripts=[...source.matchAll(/<script(?:\\s[^>]*)?>([\\s\\S]*?)<\\/script>/gi)].map(match=>match[1]);
+  const scripts=[...source.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map(match=>match[1]);
   assert.ok(scripts.length>=2,'expected embedded core and application scripts');
   scripts.forEach((script,index)=>{
     assert.doesNotThrow(()=>new vm.Script(script,{filename:`index.template.inline-${index}.js`}));

@@ -1,3 +1,4 @@
+import { assertNoNetworkCalls } from './helpers/runtime-contract.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -17,15 +18,15 @@ test('v0.8.1 keeps desktop Canvas height independent from palette content',()=>{
   assert.match(template,/\.editor-grid\{display:flex;flex-direction:column;height:auto\}/);
 });
 
-test('v0.8.1 large intermediate Preview reuses local Blob pages',()=>{
+test('large intermediate Preview renders local PDF bytes on a canvas',()=>{
   assert.match(template,/id="previewDialog"/);
   assert.match(template,/class="preview-expand-button"|preview-expand-button/);
-  assert.match(template,/function openLargePreview\(url,page,isResult=false\)/);
-  assert.match(template,/frame\.src=`\$\{url\}#toolbar=1&navpanes=0&view=Fit`/);
-  assert.match(template,/expandPreview\.onclick=\(\)=>openLargePreview\(url,offset\+i\+1,node\.type==='pdf-output'\)/);
+  assert.match(template,/function openLargePreview\(bytes,page,isResult=false\)/);
+  assert.match(template,/renderPdfBytesToCanvas\(bytes,canvas,\{targetWidth\}\)/);
+  assert.match(template,/expandPreview\.onclick=\(\)=>void openLargePreview\(bytes,offset\+i\+1,node\.type==='pdf-output'\)/);
   assert.match(template,/frame-src blob:/);
   assert.match(template,/connect-src 'none'/);
-  assert.doesNotMatch(template,/\bfetch\s*\(|XMLHttpRequest|new\s+WebSocket\s*\(/);
+  assertNoNetworkCalls(template);
 });
 
 test('v0.8.1 UX fixes stay app-level and do not modify Core semantics',()=>{

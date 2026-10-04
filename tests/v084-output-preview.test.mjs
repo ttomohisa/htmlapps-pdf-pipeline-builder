@@ -1,3 +1,4 @@
+import { assertNoNetworkCalls } from './helpers/runtime-contract.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -17,7 +18,7 @@ test('v0.8.4 Apply to Canvas always asks for in-app confirmation',()=>{
 
 test('v0.8.4 Quick Recipe opens output preview and does not auto-download',()=>{
   assert.match(template,/id="outputPreviewDialog"/);
-  assert.match(template,/id="outputPreviewFrame"/);
+  assert.match(template,/id="outputPreviewCanvas"/);
   assert.match(template,/id="outputPreviewSaveButton"/);
   assert.match(template,/openOutputPreview\(result\.bytes,result\.filename,result\.pageCount\)/);
   const start=template.indexOf('async function runQuickRecipe(');
@@ -37,6 +38,6 @@ test('v0.8.4 PDF Output Inspector uses Result wording instead of Intermediate pr
 });
 
 test('v0.8.4 remains local and app-level',()=>{
-  assert.doesNotMatch(template,/\bfetch\s*\(|XMLHttpRequest|new\s+WebSocket\s*\(/);
+  assertNoNetworkCalls(template);
   assert.doesNotMatch(core,/outputPreviewDialog|confirmQuickRecipeApply|resultPreviewTitle/);
 });
