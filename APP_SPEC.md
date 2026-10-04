@@ -76,13 +76,25 @@ Principles:
 - one required `pages` output
 - local PDF picker / drag-and-drop
 - only filename/page-count metadata persists
+- imported display metadata is untrusted: the Inspector renders all metadata as text; page counts must be nonnegative safe-integer numbers (other values, including numeric strings, display as unknown); loaded PDF metadata takes precedence
 - PDF bytes stay in runtime memory
 
 ### Select / Reorder
 
 - required `pages` input/output
 - persisted type remains `select-pages`
-- supports `all`, ranges, comma lists, descending ranges, and arbitrary order such as `3,1,2`
+- supports `all`, `odd`, `even`, `last`, numeric or `last` range endpoints, comma combinations, descending ranges, and arbitrary order such as `3,1,2`
+
+### Shared page-expression contract
+
+- Select / Reorder, Delete Pages, Duplicate Pages, and Split use one parser against the current node input stream, with 1-based positions independent of persisted input metadata.
+- `all`, `odd`, `even`, and `last` are case-insensitive. Leading/trailing token whitespace and whitespace around range hyphens are accepted. Empty input retains the existing `all` fallback.
+- Comma tokens concatenate in expression order. `2-last` selects through the final input position. `last-1` selects every input position in descending order; it is not subtraction.
+- Select / Reorder and Split Selected preserve repeated positions. Delete and Duplicate use unique target positions; Duplicate adds the configured copies after each original. Split Rest and Delete preserve input order for unselected positions.
+- Valid parity selectors may be empty (`even` with one page; `odd`/`even` with no pages). `last` requires at least one page. The existing final-output empty-stream error remains in force.
+- Invalid tokens, malformed ranges, and empty comma tokens report syntax errors. Numeric endpoints outside 1…input length report bounds errors before a range expands.
+- Reusing a saved Pipeline or Quick Recipe resolves symbolic selectors afresh for the new PDF and each node input length. Graph and Recipe schemas, Node Editor Core, and runtime dependencies remain unchanged.
+- Acceptance: test one-page and odd/even-length inputs, mixed/repeated tokens, descending ranges, malformed/out-of-range expressions, all affected operations after upstream reorder, complement order, and serialized Recipe reruns with different PDF lengths.
 
 ### Delete Pages
 

@@ -106,3 +106,46 @@ test('Split intermediate preview exposes Selected and Rest independently',async(
   assert.deepEqual(Array.from(selected,ref=>ref.index),[1,0]);
   assert.deepEqual(Array.from(rest,ref=>ref.index),[2]);
 });
+
+for(const [type,data,port,expected] of [
+  ['select-pages',{range:'last,even'},'out',[0,1]],
+  ['delete-pages',{range:'odd,last'},'out',[1]],
+  ['duplicate-pages',{range:'last,odd,last',copies:1},'out',[2,2,1,0,0]],
+  ['split-pages',{range:'last,odd,last'},'selected',[0,2,0,0]],
+  ['split-pages',{range:'last,odd,last'},'rest',[1]]
+]) test(`${type} ${port} resolves symbolic positions after upstream reorder`,async()=>{
+  const bytes=new Uint8Array(fs.readFileSync(path.join(root,'tests-fixtures/a.pdf')));
+  const graph={nodes:[
+    {id:'source',type:'pdf-input',data:{pageCount:999}},
+    {id:'reorder',type:'select-pages',data:{range:'3-1'}},
+    {id:'target',type,data}
+  ],edges:[
+    {source:{nodeId:'source',portId:'pages'},target:{nodeId:'reorder',portId:'in'}},
+    {source:{nodeId:'reorder',portId:'out'},target:{nodeId:'target',portId:'in'}}
+  ]};
+  const ctx=evaluatorContext(graph,[['source',{bytes}]]);
+  const refs=await vm.runInContext('createPageEvaluator()',ctx).evalNode('target',port);
+  assert.deepEqual(Array.from(refs,ref=>ref.index),expected);
+});
+
+test('serialized recipe reruns symbolic selectors against each new PDF and node input length',async()=>{
+  const recipe=JSON.stringify({nodes:[
+    {id:'source',type:'pdf-input',data:{pageCount:999}},
+    {id:'select',type:'select-pages',data:{range:'even'}},
+    {id:'split',type:'split-pages',data:{range:'last-1'}}
+  ],edges:[
+    {source:{nodeId:'source',portId:'pages'},target:{nodeId:'select',portId:'in'}},
+    {source:{nodeId:'select',portId:'out'},target:{nodeId:'split',portId:'in'}}
+  ]});
+  const ctx=evaluatorContext(null,[]);
+  for(const [count,expected] of [[4,[3,1]],[7,[5,3,1]]]){
+    const doc=await ctx.PDFLib.PDFDocument.create();
+    for(let i=0;i<count;i++)doc.addPage();
+    const bytes=await doc.save();
+    ctx.runGraph=JSON.parse(recipe);
+    ctx.runFiles=new Map([['source',{bytes}]]);
+    const evaluator=vm.runInContext('createPageEvaluator({graph:runGraph,files:runFiles,runtimeTarget:null})',ctx);
+    assert.deepEqual(Array.from(await evaluator.evalNode('split','selected'),ref=>ref.index),expected);
+    assert.deepEqual(Array.from(await evaluator.evalNode('split','rest')),[]);
+  }
+});
