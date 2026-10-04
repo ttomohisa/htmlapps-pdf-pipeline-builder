@@ -41,6 +41,10 @@ GitHub Pagesから最初のHTMLを読み込んだ後、選択したPDF、途中�
 
 正式ビルドでは、`pdf-pipeline-builder.html` と `dist/index.html` に同一の単一HTMLを生成します。必要なのはWindows PowerShellと標準の `tar.exe` で、Node.jsは不要です。Node.jsはリポジトリの開発用テスト／高速ローカルビルド補助にのみ使用します。
 
+### ページ指定
+
+ページ指定は all（全て）、odd（奇数）、even（偶数）、last（最後）、範囲、カンマ区切りを使えます。2-last は2ページ目から最後、last-1 は最後から1ページ目への逆順です。各ノードへの入力列を1から数え、Recipeでも新しいPDFに合わせて解決します。選択・並べ替えと分岐の選択側は指定順と重複を維持し、削除・複製は重複指定を1回と扱います。分岐の残りと削除後の列は元の順番です。1ページ入力の even は空になり、最終出力が空なら実行できません。
+
 ## 使い方
 
 1. **PDF Input** Nodeを1つ以上置き、ローカルPDFを選択します。
@@ -146,6 +150,7 @@ GitHub Actionsと同等のリポジトリ検証は、Windows / PowerShellで次�
 - Content Security Policyに `connect-src 'none'` を設定
 - アプリ実行時に `fetch`、`XMLHttpRequest`、`WebSocket` を使用しない
 - 途中結果 / 結果Previewは内包したPDF.jsでCanvasへローカル描画
+- 読み込んだPDF Input情報はテキストとして表示。不正なページ数情報は未確認とし、PDF選択後は実際のページ数を使用
 - 元PDF bytesはメモリ上だけに保持し、Pipeline JSONやRecipeへ書き込まない
 - Recipeはこのブラウザーの`localStorage`へ保存。永続保存を利用できない場合はセッション内メモリへフォールバックし、画面に警告を表示
 - GitHub Pages版では最初のHTML配信は発生しますが、選択したPDF内容をアプリから送信しません
