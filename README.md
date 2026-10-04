@@ -26,6 +26,10 @@ GitHub Pages delivers the initial HTML. After it loads, selected PDFs, intermedi
 - **Edit comfortably on desktop and mobile** — Desktop keeps the three-column editor, while mobile centers the Canvas and moves node adding, settings, secondary tools, and results into bottom sheets with a fixed action bar.
 - **Private, single-HTML operation** — `pdf-lib`, PDF.js, and Node Editor Core are embedded, runtime network access is blocked, and source/generated PDF bytes are not stored in Pipeline JSON or Recipes.
 
+### Page expressions
+
+Page expressions accept all, odd, even, last, ranges, and comma combinations. 2-last means page 2 through the end; last-1 means every page in reverse order, not last minus one. Positions start at 1 in each node’s input stream and resolve again for new Recipe PDFs. Select / Reorder and Split Selected keep expression order and repeats; Delete and Duplicate count repeated targets once. Split Rest and remaining pages keep input order. even on a one-page input is empty; an empty final output cannot run.
+
 ## Quick start
 
 ### Use the web demo
@@ -146,6 +150,7 @@ The generated HTML is designed for fully local PDF processing after the file has
 - Content Security Policy includes `connect-src 'none'`.
 - Runtime `fetch`, `XMLHttpRequest`, and `WebSocket` are not used by the application.
 - Intermediate / Result previews are rendered locally to Canvas by the embedded PDF.js runtime.
+- Imported PDF Input metadata is displayed as text. Invalid page-count metadata is shown as unknown; the selected PDF supplies the actual count.
 - Source PDF bytes stay in runtime memory and are not written into Pipeline JSON or Recipe storage.
 - Recipes are stored in this browser's `localStorage`; if persistent storage is unavailable, the app falls back to session memory and shows a warning.
 - The GitHub Pages version requires the initial HTML request, but selected PDF content is not transmitted by the app.

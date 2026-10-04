@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Fixed imported PDF Input page-count metadata being interpreted as HTML. Inspector metadata now uses text-only rendering and validates page-count numbers; loaded PDFs remain authoritative.
+
+- Added reusable `odd`, `even`, and `last` page selectors, including `2-last`, descending `last-1`, and comma combinations across Select / Reorder, Delete, Duplicate, and Split.
+- Resolve selectors against each node’s current input stream on every run, so saved Pipelines and Recipes adapt to new PDF lengths while keeping existing order, duplicate, and complement semantics.
+- Documented the syntax and empty parity selections in Japanese and English help, Inspector hints, READMEs, and the application specification; added parser and evaluator regression coverage.
+
 ## 1.0.0 - 2026-09-15
 
 - Promoted the validated v0.9.0 release candidate to the first stable PDF Pipeline Builder release.

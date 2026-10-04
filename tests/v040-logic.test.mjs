@@ -31,6 +31,9 @@ function appHelpers(){
   const source=[
     extractFunction('parsePageOrder'),
     extractFunction('splitPageRefs'),
+    extractFunction('pageIndexSet'),
+    extractFunction('deletePageRefs'),
+    extractFunction('duplicatePageRefs'),
     extractFunction('mergeInputCount'),
     extractFunction('mergeInputPortIds')
   ].join('\n');
@@ -75,4 +78,49 @@ test('dynamic Merge ports participate in required-port validation',()=>{
   assert.equal(Core.validateGraph(graph,{registry}).length,0);
   const missingC=Core.createGraph({appId:'pdf-pipeline-builder',nodes,edges:edges.filter(edge=>edge.id!=='ec')});
   assert.ok(Core.validateGraph(missingC,{registry}).some(issue=>issue.code==='REQUIRED_TARGET_PORT'&&issue.path.endsWith('.c')));
+});
+
+// These cases fail if symbolic selectors are rejected or expanded against stale counts.
+for(const [count,expression,expected] of [
+  [1,'odd',[0]],[1,'even',[]],[1,'last',[0]],
+  [5,'odd',[0,2,4]],[5,'even',[1,3]],[6,'odd',[0,2,4]],[6,'even',[1,3,5]],
+  [5,'2-last',[1,2,3,4]],[5,'last-1',[4,3,2,1,0]],[1,'last-last',[0]],
+  [5,'last,odd,2-last',[4,0,2,4,1,2,3,4]],
+  [4,' EVEN , last - 2,1 ',[1,3,3,2,1,0]],
+  [3,'all,last',[0,1,2,2]],[3,'3-1,2,2',[2,1,0,1,1]],
+  [0,'odd',[]],[0,'even',[]],[0,'all',[]],[1,'even,last',[0]],
+  [3,'',[0,1,2]],[3,'  ',[0,1,2]]
+]) test(`page selector ${JSON.stringify(expression)} with ${count} pages`,()=>{
+  const ctx=appHelpers();
+  assert.deepEqual(Array.from(vm.runInContext(`parsePageOrder(${JSON.stringify(expression)},${count})`,ctx)),expected);
+});
+
+for(const expression of ['oddly','even-3','1-odd','last+1','last-','1--2','1.5','odd,,last','last,',',odd','<b>last</b>']){
+  test(`invalid page selector ${expression} reports syntax error`,()=>{
+    const ctx=appHelpers();
+    assert.throws(()=>vm.runInContext(`parsePageOrder(${JSON.stringify(expression)},5)`,ctx),/invalidRange/);
+  });
+}
+for(const [expression,count] of [['0',5],['6',5],['last-6',5],['6-last',5],['0-last',5],['last',0],['9007199254740992',5]]){
+  test(`out-of-range page selector ${expression} with ${count} pages reports bounds error`,()=>{
+    const ctx=appHelpers();
+    assert.throws(()=>vm.runInContext(`parsePageOrder(${JSON.stringify(expression)},${count})`,ctx),/outOfRange/);
+  });
+}
+
+test('Split preserves repeated symbolic selections and complement input order',()=>{
+  const ctx=appHelpers();
+  const split=vm.runInContext(`splitPageRefs(['P5','P4','P3','P2','P1'],'last,odd,last')`,ctx);
+  assert.deepEqual(Array.from(split.selected),['P1','P5','P3','P1','P1']);
+  assert.deepEqual(Array.from(split.rest),['P4','P2']);
+});
+
+test('Delete and Duplicate keep set semantics for overlapping symbolic selections',()=>{
+  const ctx=appHelpers();
+  ctx.pages=Array.from({length:5},(_,index)=>({index}));
+  const deleted=vm.runInContext(`deletePageRefs(pages,'last,odd,last')`,ctx);
+  assert.deepEqual(Array.from(deleted,p=>p.index),[1,3]);
+  const duplicated=vm.runInContext(`duplicatePageRefs(pages,'last,odd,last',2)`,ctx);
+  assert.deepEqual(Array.from(duplicated,p=>p.index),[0,0,0,1,2,2,2,3,4,4,4]);
+  assert.equal(ctx.pages.length,5);
 });
