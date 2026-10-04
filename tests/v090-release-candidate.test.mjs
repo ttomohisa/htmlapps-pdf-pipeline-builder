@@ -1,3 +1,4 @@
+import { assertNoNetworkCalls } from './helpers/runtime-contract.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -38,14 +39,13 @@ test('v0.9.0 keeps application confirmations in-app and runtime local',()=>{
   assert.doesNotMatch(source,/\b(?:window\.)?(?:confirm|alert|prompt)\s*\(/);
   assert.match(source,/connect-src 'none'/);
   assert.match(source,/frame-src blob:/);
-  assert.doesNotMatch(source,/\bfetch\s*\(/);
-  assert.doesNotMatch(source,/new\s+XMLHttpRequest\s*\(/);
-  assert.doesNotMatch(source,/new\s+WebSocket\s*\(/);
+  assertNoNetworkCalls(source);
 });
 
-test('v0.9.0 keeps Core and favicon pinned to the v0.8.4 release candidate baseline',()=>{
+test('release keeps Core compatibility and a version badge matching app metadata',()=>{
   assert.ok(core.length>1000);
   assert.ok(favicon.length>20);
   assert.match(source,/coreVersion:'1\.0\.0'/);
-  assert.match(source,/PDF Pipeline Builder <span class="version-badge">v1\.0\.0<\/span>/);
+  const config=JSON.parse(fs.readFileSync(new URL('../app.config.json',import.meta.url),'utf8'));
+  assert.equal(source.match(/class="version-badge">v([^<]+)<\/span>/)?.[1],config.version);
 });

@@ -1,3 +1,4 @@
+import { assertNoNetworkCalls } from './helpers/runtime-contract.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -54,6 +55,6 @@ test('saved Recipes are surfaced above the editor with per-input local PDF picke
 });
 
 test('v0.8.0 UX additions remain local and app-specific',()=>{
-  assert.doesNotMatch(template,/\bfetch\s*\(|XMLHttpRequest|new\s+WebSocket\s*\(/);
+  assertNoNetworkCalls(template);
   assert.doesNotMatch(core,/quickRecipeFiles|palette-group-toggle|palette-drag/);
 });

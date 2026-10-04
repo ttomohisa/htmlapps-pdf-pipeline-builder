@@ -1,3 +1,4 @@
+import { assertNoNetworkCalls } from './helpers/runtime-contract.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -16,7 +17,7 @@ const readmeJa=fs.readFileSync(path.join(root,'README.ja.md'),'utf8');
   assert.equal(pkg.version,config.version);
   assert.match(source,/connect-src 'none'/);
   assert.match(source,/frame-src blob:/);
-  assert.doesNotMatch(source,/\bfetch\s*\(|new\s+XMLHttpRequest\s*\(|new\s+WebSocket\s*\(/);
+  assertNoNetworkCalls(source);
   assert.doesNotMatch(source,/\b(?:window\.)?(?:confirm|alert|prompt)\s*\(/);
 });
 
