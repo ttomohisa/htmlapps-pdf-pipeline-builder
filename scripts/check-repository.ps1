@@ -250,3 +250,9 @@ if (-not $webrtcReadyText.Contains("options.requireReadyChannelOpen!==false&&(!r
   throw "WebRTC application-ready must wait for the designated DataChannel to open."
 }
 
+
+# Run the app's source, PDF boundary, and generated-release behavior regressions.
+$testFiles = @(Get-ChildItem -LiteralPath (Join-Path $Root "tests") -Filter "*.test.mjs" | Sort-Object Name | ForEach-Object { $_.FullName })
+& node --test @testFiles
+if ($LASTEXITCODE -ne 0) { throw "Application regression tests failed." }
+Write-Host "[OK] Application and generated-release regression tests passed." -ForegroundColor Green

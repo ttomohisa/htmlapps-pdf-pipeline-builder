@@ -20,17 +20,19 @@ test('v0.9.0 release candidate confirms destructive Pipeline JSON replacement',(
   assert.match(handler,/graph\.app\.id!==['"]pdf-pipeline-builder['"]/);
   assert.match(handler,/canvas\.isDirty\(\)&&!await AppConfirm\.ask\(t\(['"]confirmGraphLoad['"]\),\{confirmKey:['"]confirmReplace['"]\}\)/);
   const confirmIndex=handler.indexOf("AppConfirm.ask(t('confirmGraphLoad')");
-  const clearIndex=handler.indexOf('fileStore.clear()');
+  const clearIndex=handler.indexOf('clearRuntimeFiles()');
   const setGraphIndex=handler.indexOf('canvas.setGraph(');
   assert.ok(confirmIndex>=0 && clearIndex>confirmIndex && setGraphIndex>confirmIndex,'confirmation must happen before clearing runtime files or replacing the graph');
 });
 
 test('v0.9.0 Pipeline import cancellation can return before any destructive mutation',()=>{
+  const reset=source.match(/function clearRuntimeFiles\(\)\{([^\n]+)\}/)?.[1]||'';
+  for(const mutation of ['fileStore.clear()','inputErrors.clear()','runtimeStore.clearAll()'])assert.ok(reset.includes(mutation));
   const handler=loadHandler();
   const guard="if(canvas.isDirty()&&!await AppConfirm.ask(t('confirmGraphLoad'),{confirmKey:'confirmReplace'}))return;";
   assert.ok(handler.includes(guard));
   const guardIndex=handler.indexOf(guard);
-  for(const mutation of ['fileStore.clear()','inputErrors.clear()','runtimeStore.clearAll()','canvas.setGraph(']){
+  for(const mutation of ['clearRuntimeFiles()','canvas.setGraph(']){
     assert.ok(handler.indexOf(mutation)>guardIndex,`${mutation} must happen only after confirmation`);
   }
 });

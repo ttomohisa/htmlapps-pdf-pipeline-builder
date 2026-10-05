@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Add localized Inspector skip/enable controls and visible skipped status for the nine unary page-processing nodes. Reuse Core disabled/history/persistence and pass-through behavior; retain settings, required connections, and existing schemas.
+- Fix late Run completions restoring stale downloads and older PDF loads overwriting newer bytes/metadata. Guard progress, errors, cleanup, graph/file replacement, detach, deletion, and isolated Recipe output with request ownership; preserve the accepted file when replacement fails.
+- Prevent obsolete output previews from reopening or clearing newer previews, and release their PDF.js loading tasks.
+- Run source regressions plus the same behavior checks against the canonical readable build, tracked catalog HTML, and restored self-extract payload during repository checks.
+
 - Repair stale test expectations for current PDF.js canvas previews, release metadata, and canonical embedded-asset/self-extract manifests. Verify local CMap resolution and unsupported-resource rejection; keep network-call detection active inside the resource factory.
 - Inspect generated PDF text operators and the stamp border directly, removing the test-only requirement for an unconfigured `pdftotext` executable. Fix the malformed template-script parsing regex.
 
