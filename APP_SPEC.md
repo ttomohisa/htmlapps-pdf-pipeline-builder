@@ -1,5 +1,17 @@
 # PDF Pipeline Builder v1.1.0 — Application Specification
 
+## Step bypass and asynchronous ownership
+
+- The Inspector offers localized **Skip this step** / **Enable this step** for Select / Reorder, Delete Pages, Duplicate Pages, Insert Blank Page, Rotate, Reverse Pages, Page Numbers, Watermark, and Text Stamp. Skipped status is visible in both the Inspector and node summary. Input, Output, Split, and Merge have no skip control.
+- A skipped unary node passes its incoming page references through unchanged. Its unused settings are not validated, but all required connections remain enforced. Re-enabling restores normal validation and processing.
+- Toggling changes only the existing Core `disabled` flag; settings, node/edge IDs, connections, selection, Undo/Redo, Pipeline JSON, and Recipe persistence are preserved. No schema or Core change is needed.
+- Every output execution owns a request and an immutable graph/file-map snapshot. Processing edits, Undo/Redo, source selection/detach/deletion, accepted graph replacement, a newer execution, or page exit invalidate the previous output. View-only pan/zoom/Fit and node movement preserve an active output request. Late success, errors, progress, runtime status, and cleanup cannot revive Save or disturb newer work.
+- PDF Input loading is latest-request-wins per input within a graph generation. Late bytes, metadata, errors, and filename suggestions are ignored after supersession. A failed current replacement retains the previously accepted file and metadata. Run remains unavailable while a Canvas PDF load is pending.
+- Recipe and JSON replacement cancellation preserve the current graph, runtime files, and output. Accepted replacements cancel pending file work, including when node IDs are reused. Newer replacement requests supersede older asynchronous reads and confirmations.
+- Editing the staged sources of a running or completed Quick Recipe invalidates that Recipe output, while unrelated Recipe source changes preserve a Canvas result.
+- Closing (including Escape) or replacing an output preview rejects late PDF.js results and destroys obsolete loading tasks. Source bytes and generated output remain runtime-only.
+- Acceptance: source and canonical readable/root/restored-wrapper behavior tests cover all eligible/excluded node types, invalid unused settings, required connections, preserved page references and overlays, history/persistence, the two confirmed Run/file-load races, stale failures and cleanup, replacement cancellation/supersession, and a user-edited output filename. Browser/device rendering and native real-file interaction require separate manual verification.
+
 ## 1.0.0 Stable release
 
 - v1.0.0 promotes the validated v0.9.0 release candidate to the first stable release without introducing a new processing model.

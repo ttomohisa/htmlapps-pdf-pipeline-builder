@@ -18,6 +18,9 @@ GitHub Pages delivers the initial HTML. After it loads, selected PDFs, intermedi
 
 ## Features
 
+- Temporarily skip a single page-processing step from its Inspector, then re-enable it with settings and connections intact. Skipped steps stay skipped in Pipeline JSON and Recipes, and support Undo/Redo.
+- Edits and file replacements invalidate old generated results; late background work cannot replace newer input files or re-enable an obsolete PDF download.
+
 - **Build PDF processing as a visual Pipeline** — Connect Input, page operations, document processing, branching, Merge, and Output nodes in the order you want them to run.
 - **Preview before the final run** — Select a node to inspect the PDF state at that point. PDF Output is shown as the final Result, and previews can be enlarged.
 - **Reuse saved Recipes quickly** — Save a Pipeline as a browser-local Recipe, attach new PDFs above the editor, then either apply it to the Canvas for editing or generate an output preview without replacing the current Canvas.
@@ -81,6 +84,8 @@ Opening Pipeline JSON over unsaved Canvas changes requires an in-app confirmatio
 Page expressions such as `all`, `1-3,5`, and `3,1,2` refer to the page stream that reaches that node. Graph order therefore matters. For example, `Reorder → Page Numbers` numbers the reordered sequence, while `Page Numbers → Reorder` moves the already-numbered pages.
 
 ## Preview and output behavior
+
+Select an ordinary page-processing node and choose **Skip this step** to pass its input pages through unchanged. Choose **Enable this step** to restore it. Required connections still matter; Input, Output, Split, and Merge cannot be skipped from the Inspector. Run again after changing the pipeline or input files, then save the current result with your chosen filename.
 
 Intermediate Preview evaluates only the upstream path needed by the selected node, so unrelated branches do not need to be loaded just to inspect another branch.
 
