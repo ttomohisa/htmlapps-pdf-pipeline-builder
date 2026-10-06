@@ -3,7 +3,7 @@
   "name": "PDF Pipeline Builder",
   "nameJa": "PDF Pipeline Builder",
   "slug": "pdf-pipeline-builder",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Build reusable PDF workflows with nodes, local previews, document processing, and browser-local Recipes.",
   "descriptionJa": "PDF処理をノードで組み、途中結果と最終結果を確認しながら、保存Recipeとして繰り返し使える完全ローカル処理のWebアプリです。",
   "defaultLanguage": "auto",
