@@ -18,6 +18,8 @@ GitHub Pages delivers the initial HTML. After it loads, selected PDFs, intermedi
 
 ## Features
 
+- Japanese/English switching also updates icon labels for screen readers and matching tooltips, including dialogs and mobile controls.
+
 - Temporarily skip a single page-processing step from its Inspector, then re-enable it with settings and connections intact. Skipped steps stay skipped in Pipeline JSON and Recipes, and support Undo/Redo.
 - Edits and file replacements invalidate old generated results; late background work cannot replace newer input files or re-enable an obsolete PDF download.
 

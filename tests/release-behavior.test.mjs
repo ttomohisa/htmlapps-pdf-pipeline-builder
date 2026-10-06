@@ -12,7 +12,7 @@ const readable=fs.readFileSync(path.join(root,'dist/index.html'));
 const alias=fs.readFileSync(path.join(root,'pdf-pipeline-builder.html'));
 const wrapper=fs.readFileSync(path.join(root,'dist/index.self-extract.html'),'utf8');
 const payload=wrapper.match(/<script id="self-extract-payload" type="application\/octet-stream">([A-Za-z0-9+/=\s]+)<\/script>/)?.[1];
-const behaviors=['async-ownership.test.mjs','output-preview-ownership.test.mjs','step-bypass.test.mjs'].map(name=>path.join(root,'tests',name));
+const behaviors=['localized-accessibility.test.mjs','async-ownership.test.mjs','output-preview-ownership.test.mjs','step-bypass.test.mjs'].map(name=>path.join(root,'tests',name));
 
 test('tracked catalog alias and restored wrapper match the canonical readable build',()=>{
   assert.deepEqual(alias,readable);

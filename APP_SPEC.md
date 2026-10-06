@@ -1,4 +1,10 @@
-# PDF Pipeline Builder v1.1.0 — Application Specification
+# PDF Pipeline Builder v1.1.1 — Application Specification
+
+## Accessible language labels
+
+- Help, desktop/mobile zoom, dialog close controls, preview navigation, and labeled regions use the selected Japanese or English language from initial load and after every switch. Icon-control tooltips match their accessible names. Hidden dialogs are localized before they open.
+- Existing state-dependent canvas toolbar labels remain synchronized with their current action. Pipeline processing, persistence, Core, and export behavior are unchanged.
+- Regression tests run against source, readable release, catalog HTML, and restored self-extract payload.
 
 ## Step bypass and asynchronous ownership
 

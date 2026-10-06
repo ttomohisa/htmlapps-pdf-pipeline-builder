@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.1 - 2026-10-06
+
+- Fix Japanese-only accessible names in English mode for Help, desktop/mobile zoom controls, dialog close buttons, and output previews. Localize labeled regions and synchronize icon tooltips on initial load and repeated JA/EN switches.
+- Add regression coverage for both languages and all generated release variants; keep PDF processing, graph schemas, dependencies, CSP, and the local-processing badge unchanged.
+
 ## Unreleased
 
 - Add localized Inspector skip/enable controls and visible skipped status for the nine unary page-processing nodes. Reuse Core disabled/history/persistence and pass-through behavior; retain settings, required connections, and existing schemas.
