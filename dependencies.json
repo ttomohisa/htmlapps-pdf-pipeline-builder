@@ -38,6 +38,7 @@
         {
           "key": "worker",
           "path": "build/pdf.worker.min.mjs",
+          "executionContext": "main-thread",
           "mime": "text/javascript",
           "stripSourceMapComment": true,
           "compression": "auto"

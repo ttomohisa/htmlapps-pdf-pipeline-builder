@@ -197,3 +197,9 @@ URL.revokeObjectURL(workerUrl);
 - Update `THIRD_PARTY_NOTICES.md` with required copyright and license text.
 - Rebuild and inspect `dependency-manifest.json` and `build-size-report.json`.
 - Test the affected feature with the network disabled.
+
+## Asset execution context
+
+Optional per-asset `executionContext` accepts exactly `main-thread` or `worker`. It describes actual application execution, not the upstream filename, and is health-check metadata only. Omit it when unknown; do not use it to suppress an actual Worker requirement.
+
+This app declares PDF.js `build/pdf.worker.min.mjs` as `main-thread`: `ensurePdfJs()` imports it through `StandaloneAssets.importModule`, assigns its `WorkerMessageHandler` to `globalThis.pdfjsWorker`, then sets `GlobalWorkerOptions.workerPort = null`. It does not create a Worker for that module. The regression test executes this initializer with a throwing Worker constructor. If the execution model changes, update this declaration and the registry capability together. Package versions, bytes, lock hashes, and runtime behavior are unchanged.
