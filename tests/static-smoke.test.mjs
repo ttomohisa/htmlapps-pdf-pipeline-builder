@@ -116,7 +116,7 @@ test('file flow exposes input/output state and drag-drop PDF loading',()=>{
 
 test('provided favicon is embedded unchanged and reused as the header icon',()=>{
   const favicon=fs.readFileSync(path.join(root,'assets/favicon.svg'),'utf8');
-  assert.match(favicon,/#11644f/i);
+  assert.match(favicon,/#16624f/i);
   const encoded=Buffer.from(favicon).toString('base64');
   assert.ok(dist.includes('data:image/svg+xml;base64,'+encoded));
   assert.match(template,/<img id="appBrandIcon" src="__APP_ICON_DATA_URI__" alt="">/);
