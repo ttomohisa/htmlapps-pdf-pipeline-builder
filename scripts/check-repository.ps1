@@ -256,3 +256,6 @@ $testFiles = @(Get-ChildItem -LiteralPath (Join-Path $Root "tests") -Filter "*.t
 & node --test @testFiles
 if ($LASTEXITCODE -ne 0) { throw "Application regression tests failed." }
 Write-Host "[OK] Application and generated-release regression tests passed." -ForegroundColor Green
+
+& node (Join-Path $Root "scripts/test-icon-normalization.cjs")
+if ($LASTEXITCODE -ne 0) { throw "Icon normalization checks failed." }

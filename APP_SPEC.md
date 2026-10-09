@@ -1,5 +1,10 @@
 # PDF Pipeline Builder v1.1.2 — Application Specification
 
+## v1.1.3 — Icon normalization
+
+- Canonical background and matching artwork green: `#16624f`; background x/y radii exactly 25% of their respective dimensions.
+- Preserve artwork, padding, app behavior, and synchronized header/favicon/download/loader representations.
+
 ## Accessible language labels
 
 - Help, desktop/mobile zoom, dialog close controls, preview navigation, and labeled regions use the selected Japanese or English language from initial load and after every switch. Icon-control tooltips match their accessible names. Hidden dialogs are localized before they open.
