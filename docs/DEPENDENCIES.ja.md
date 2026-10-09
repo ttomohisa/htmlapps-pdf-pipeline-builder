@@ -164,3 +164,9 @@ const workerUrl = await StandaloneAssets.blobUrlAsync('library-id', 'worker');
 - 必要なライセンス表記を `THIRD_PARTY_NOTICES.md` へ反映する。
 - `dependency-manifest.json` と `build-size-report.json` を確認する。
 - ネットワークを切った状態で影響機能をテストする。
+
+## アセットの実行場所
+
+アセット単位の任意項目 `executionContext` には、`main-thread` または `worker` を指定できます。上流のファイル名ではなく、このアプリで実際に実行する場所を表すヘルスチェック用メタデータです。不明な場合は省略し、実際に必要なWorkerの警告を隠すために使わないでください。
+
+このアプリの PDF.js `build/pdf.worker.min.mjs` は `main-thread` です。`ensurePdfJs()` が `StandaloneAssets.importModule` で読み込み、`WorkerMessageHandler` を `globalThis.pdfjsWorker` に設定してから、`GlobalWorkerOptions.workerPort = null` にします。このモジュール用のWorkerは作成しません。回帰テストではWorkerの作成時に例外を投げる環境で、この初期化処理を実行します。実行方式を変更する場合は、この宣言とRegistryの機能フラグを同時に見直してください。パッケージのバージョン・内容・ロックハッシュや実行時の動作は変更していません。

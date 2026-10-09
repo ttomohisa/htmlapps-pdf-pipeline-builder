@@ -77,6 +77,14 @@
                     "gzip",
                     "auto"
                   ]
+                },
+                "executionContext": {
+                  "type": "string",
+                  "enum": [
+                    "main-thread",
+                    "worker"
+                  ],
+                  "description": "How this app executes this specific embedded asset. Main-thread assets must never be passed to a Worker."
                 }
               }
             }

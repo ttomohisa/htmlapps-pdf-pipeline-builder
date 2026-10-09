@@ -1,4 +1,4 @@
-# PDF Pipeline Builder v1.1.1 — Application Specification
+# PDF Pipeline Builder v1.1.2 — Application Specification
 
 ## Accessible language labels
 
