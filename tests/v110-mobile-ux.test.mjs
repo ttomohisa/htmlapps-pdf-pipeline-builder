@@ -11,9 +11,9 @@ const pkg=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8'));
 const deps=JSON.parse(fs.readFileSync(path.join(root,'dependencies.json'),'utf8'));
 
 test('v1.1.0 adds a canvas-first mobile workspace without changing desktop markup',()=>{
-  assert.equal(config.version,'1.1.3');
-  assert.equal(pkg.version,'1.1.3');
-  assert.match(source,/PDF Pipeline Builder <span class="version-badge">v1\.1\.3<\/span>/);
+  assert.equal(config.version,'1.1.4');
+  assert.equal(pkg.version,'1.1.4');
+  assert.match(source,/PDF Pipeline Builder <span class="version-badge">v1\.1\.4<\/span>/);
   assert.match(source,/class="mobile-action-bar"/);
   assert.match(source,/id="mobileAddButton"/);
   assert.match(source,/id="mobileRunButton"/);
@@ -47,7 +47,7 @@ test('mobile sheets remain dismissible and the primary action exposes generated 
   assert.match(source,/id="mobileSheetBackdrop"/);
   assert.match(source,/data-mobile-sheet-close/);
   assert.match(source,/mobileSheetBackdrop'\)\.onclick=closeMobileSheets/);
-  assert.match(source,/e\.key==='Escape'.*mobile-sheet-open/);
+  assert.match(source,/mobile-sheet-open[\s\S]*?e\.key==='Escape'[^\n]*closeMobileSheets/);
   assert.match(source,/if\(outputBytes\)\{openMobileSheet\('result'\)/);
   assert.match(source,/function setExpanded\(expanded\)\{[^}]*closeMobileSheets\(\)/);
   assert.match(source,/mobileExpandButton'\)\.onclick=\(\)=>setExpanded/);

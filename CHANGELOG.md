@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.4 - 2026-10-10
+
+- Keep native dialog headers visible and content scrollable in narrow/short viewports; lock background page scrolling.
+- Contain keyboard focus in mobile sheets and restore the opening control after close; preserve nested native dialog keyboard behavior.
+- Wrap long node filenames and retain the existing local-processing shield artwork.
+- Add source and generated-release regression coverage without changing graph semantics, Core, or dependencies.
+
 ## 1.1.3 - 2026-10-09
 
 - Normalize icon brand color and exact 25% background corner radii without changing artwork.

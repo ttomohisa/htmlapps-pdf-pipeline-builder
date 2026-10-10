@@ -1,4 +1,12 @@
-# PDF Pipeline Builder v1.1.2 — Application Specification
+# PDF Pipeline Builder v1.1.4 — Application Specification
+
+## v1.1.4 — Responsive dialogs and keyboard focus
+
+- Native Help, Recipe, confirmation, and preview dialogs keep their header and close control visible while their content scrolls in short viewports; background page scrolling is paused.
+- Mobile Add, Settings, More, and Result sheets move focus to their first available control, contain Tab / Shift+Tab, close with Escape, and return focus to their opener. A native dialog above a sheet owns its own keyboard cycle.
+- Long unbroken filenames wrap within node summaries without changing graph layout or processing semantics.
+- Preserve the existing canonical shield/check local-processing badge, app artwork, Node Editor Core, and dependency payloads.
+- Acceptance includes empty/disabled sheet states, native close/backdrop/reopen, nested dialog focus, short/narrow viewport geometry, input→operation→PDF save, and generated release checks. Real phone keyboard/orientation are separately reported when not available.
 
 ## v1.1.3 — Icon normalization
 
