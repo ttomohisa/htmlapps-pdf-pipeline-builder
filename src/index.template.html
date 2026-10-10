@@ -156,7 +156,7 @@
       .workspace.is-expanded .nec-minimap{display:none!important}
       .toast{bottom:calc(var(--mobile-action-height) + 12px + env(safe-area-inset-bottom))}
     }
-  .output-preview-dialog{width:min(1040px,calc(100vw - 28px));max-width:none}.output-preview-dialog .dialog-body{padding:12px}.output-preview-meta{margin-top:2px;color:var(--muted);font-size:11px}.output-preview-canvas-wrap{display:grid;place-items:start center;width:100%;height:min(68vh,720px);overflow:auto;padding:12px;border:1px solid var(--line);border-radius:10px;background:#eceeea}.output-preview-canvas{display:block;max-width:none;background:#fff;box-shadow:0 5px 24px rgba(25,28,24,.12)}.output-preview-controls{display:grid;grid-template-columns:44px minmax(80px,1fr) 44px;align-items:center;gap:8px;max-width:260px;margin:10px auto 0}.output-preview-controls button{min-height:40px;border:1px solid var(--line);border-radius:9px;background:var(--surface);font-weight:850}.output-preview-controls span{text-align:center;color:var(--muted);font-size:11px;font-weight:750}.output-preview-actions{display:flex;justify-content:flex-end;margin-top:10px}</style>
+  .output-preview-dialog{width:min(1040px,calc(100vw - 28px));max-width:none}.output-preview-dialog .dialog-body{padding:12px}.output-preview-meta{margin-top:2px;color:var(--muted);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.output-preview-canvas-wrap{display:grid;place-items:start center;width:100%;height:min(68vh,720px);overflow:auto;padding:12px;border:1px solid var(--line);border-radius:10px;background:#eceeea}.output-preview-canvas{display:block;max-width:none;background:#fff;box-shadow:0 5px 24px rgba(25,28,24,.12)}.output-preview-controls{display:grid;grid-template-columns:44px minmax(80px,1fr) 44px;align-items:center;gap:8px;max-width:260px;margin:10px auto 0}.output-preview-controls button{min-height:40px;border:1px solid var(--line);border-radius:9px;background:var(--surface);font-weight:850}.output-preview-controls span{text-align:center;color:var(--muted);font-size:11px;font-weight:750}.output-preview-actions{display:flex;justify-content:flex-end;margin-top:10px}</style>
 </head>
 <body>
   <header class="app-header"><div class="header-inner">
@@ -350,10 +350,10 @@
     const MOBILE_SHEET_CLASSES=['mobile-sheet-palette','mobile-sheet-inspector','mobile-sheet-tools','mobile-sheet-result'];
     function isMobileLayout(){return mobileMedia.matches}
     const MOBILE_SHEET_SELECTORS={palette:'.palette',inspector:'.inspector',tools:'.mobile-tools-sheet',result:'.result-bar'};
-    let activeMobileSheet=null,mobileSheetOpener=null;
+    let activeMobileSheet=null,mobileSheetOpener=null,mobileSheetFocusRequest=0;
     function mobileSheetControls(){return activeMobileSheet?[...activeMobileSheet.querySelectorAll('button:not([disabled]),input:not([disabled]):not([type="hidden"]),select:not([disabled]),textarea:not([disabled]),a[href],[tabindex]:not([tabindex="-1"])')].filter(control=>control.getClientRects().length):[]}
     function closeMobileSheets(restoreFocus=true){
-      const opener=mobileSheetOpener;activeMobileSheet=null;mobileSheetOpener=null;
+      const opener=mobileSheetOpener;activeMobileSheet=null;mobileSheetOpener=null;mobileSheetFocusRequest++;
       for(const name of MOBILE_SHEET_CLASSES)document.body.classList.remove(name);document.body.classList.remove('mobile-sheet-open');
       if(restoreFocus&&opener?.isConnected)opener.focus({preventScroll:true});
     }
@@ -362,7 +362,13 @@
       const opener=mobileSheetOpener||document.activeElement;closeMobileSheets(false);
       activeMobileSheet=$(MOBILE_SHEET_SELECTORS[name]);mobileSheetOpener=opener;
       document.body.classList.add('mobile-sheet-open',`mobile-sheet-${name}`);
-      mobileSheetControls()[0]?.focus({preventScroll:true});
+      // Visibility is still hidden at the first transition frame in Chromium.
+      // A newer sheet, close, layout change, or native dialog owns later focus.
+      const sheet=activeMobileSheet,request=++mobileSheetFocusRequest;
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{
+        if(request!==mobileSheetFocusRequest||activeMobileSheet!==sheet||!isMobileLayout()||document.querySelector('dialog[open]')||sheet.contains(document.activeElement))return;
+        mobileSheetControls()[0]?.focus({preventScroll:true});
+      }));
     }
     function syncMobileUi(){
       const undo=$('#mobileUndoButton'),redo=$('#mobileRedoButton'),run=$('#mobileRunButton'),label=$('#mobileRunLabel');
@@ -592,7 +598,7 @@
         showToast(t('previewFailed',{message:error?.message||String(error)}),true);
       }
     }
-    async function openOutputPreview(bytes,filename,pageCount){const closing=closeOutputPreview(),requestId=outputPreviewRequestId;await closing;if(requestId!==outputPreviewRequestId)return;$('#outputPreviewMeta').textContent=`${filename} · ${pageCount} ${t('pageUnit')} · ${formatBytes(bytes.length)}`;$('#outputPreviewPrevButton').setAttribute('aria-label',t('previewPrevious'));$('#outputPreviewNextButton').setAttribute('aria-label',t('previewNext'));const dialog=$('#outputPreviewDialog');dialog.showModal();try{const opened=await openPdfJsDocument(bytes);if(requestId!==outputPreviewRequestId){await opened.loadingTask.destroy().catch(()=>{});return}outputPreviewLoadingTask=opened.loadingTask;outputPreviewDoc=opened.doc;outputPreviewPage=1;await renderOutputPreviewPage(1)}catch(error){if(requestId!==outputPreviewRequestId)return;console.error(error);showToast(t('previewFailed',{message:error?.message||String(error)}),true)}}
+    async function openOutputPreview(bytes,filename,pageCount){const closing=closeOutputPreview(),requestId=outputPreviewRequestId;await closing;if(requestId!==outputPreviewRequestId)return;$('#outputPreviewMeta').textContent=`${filename} · ${pageCount} ${t('pageUnit')} · ${formatBytes(bytes.length)}`;$('#outputPreviewMeta').title=$('#outputPreviewMeta').textContent;$('#outputPreviewPrevButton').setAttribute('aria-label',t('previewPrevious'));$('#outputPreviewNextButton').setAttribute('aria-label',t('previewNext'));const dialog=$('#outputPreviewDialog');dialog.showModal();try{const opened=await openPdfJsDocument(bytes);if(requestId!==outputPreviewRequestId){await opened.loadingTask.destroy().catch(()=>{});return}outputPreviewLoadingTask=opened.loadingTask;outputPreviewDoc=opened.doc;outputPreviewPage=1;await renderOutputPreviewPage(1)}catch(error){if(requestId!==outputPreviewRequestId)return;console.error(error);showToast(t('previewFailed',{message:error?.message||String(error)}),true)}}
     function previewPortsForNode(node){if(node.type==='split-pages')return[{id:'selected',labelKey:'previewSelected'},{id:'rest',labelKey:'previewRest'}];if(node.type==='pdf-input')return[{id:'pages'}];if(node.type==='pdf-output')return[{id:'in'}];return[{id:'out'}]}
     function previewErrorKey(error){const message=String(error?.message||'');if(message.startsWith('PREVIEW_FILE:'))return'previewNeedFile';if(message.startsWith('PREVIEW_EDGE:'))return'previewMissingConnection';return''}
     function previewStateBox(section,key,params={},error=false){const state=document.createElement('div');state.className=`preview-state${error?' error':''}`;state.textContent=t(key,params);section.append(state)}

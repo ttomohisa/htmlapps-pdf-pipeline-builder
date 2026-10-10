@@ -26,3 +26,11 @@ test('native Escape invalidates a pending preview and releases its late PDF.js t
  const run=harness();await run(`(async()=>{const opening=openOutputPreview(new Uint8Array([1]),'A.pdf',1);await Promise.resolve();const cancel=$('#outputPreviewDialog').events.cancel;if(!cancel)throw Error('native cancel does not clean up');let prevented=false;cancel({preventDefault(){prevented=true}});if(!prevented)throw Error('unowned native close');let destroyed=0;opened[0].resolve({loadingTask:{destroy:async()=>destroyed++},doc:{name:'A'}});await opening;if(destroyed!==1)throw Error('stale PDF.js task leaked')})()`);
  assert.equal(run('outputPreviewDoc'),null);assert.equal(run("$('#outputPreviewDialog').open"),false);
 });
+
+test('ellipsized output metadata retains its full unbroken Unicode filename and title',async()=>{
+ const run=harness(),filename='長い合成ファイル名🧪'.repeat(256)+'.pdf';
+ await run(`(async()=>{const opening=openOutputPreview(new Uint8Array([1,2]),${JSON.stringify(filename)},2);await Promise.resolve();opened[0].resolve({loadingTask:{destroy:async()=>{}},doc:{name:'Unicode'}});await opening})()`);
+ const expected=filename+' · 2 pageUnit · 2';
+ assert.equal(run("$('#outputPreviewMeta').textContent"),expected);
+ assert.equal(run("$('#outputPreviewMeta').title"),expected);
+});

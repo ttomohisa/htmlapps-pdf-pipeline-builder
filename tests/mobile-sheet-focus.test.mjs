@@ -3,24 +3,26 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 const html=fs.readFileSync(process.env.PDF_PIPELINE_TEST_HTML || new URL('../src/index.template.html',import.meta.url),'utf8');
-function harness(){
+function harness({deferredVisibility=false}={}){
+ const frames=[];let renderedFrames=0;
  const classes=new Set(),listeners={},panels=new Map();
  const document={activeElement:null,body:{classList:{add(...xs){xs.forEach(x=>classes.add(x))},remove(...xs){xs.forEach(x=>classes.delete(x))},contains(x){return classes.has(x)}}},dialogOpen:false,
   querySelector(selector){if(selector==='dialog[open]')return this.dialogOpen?{}:null;return panels.get(selector)||null;},addEventListener(type,callback){listeners[type]=callback}};
- function control(id,{disabled=false,visible=true}={}){return{id,disabled,isConnected:true,focus(){document.activeElement=this},getClientRects(){return visible?[{}]:[]}}}
+ function control(id,{disabled=false,visible=true}={}){return{id,disabled,isConnected:true,focus(){if(deferredVisibility&&id!=="opener"&&renderedFrames<2)return;document.activeElement=this},getClientRects(){return visible?[{}]:[]}}}
  const opener=control('opener');document.activeElement=opener;
  for(const selector of ['.palette','.inspector','.mobile-tools-sheet','.result-bar']){
   const controls=[control(selector+'-close'),control(selector+'-hidden',{visible:false}),control(selector+'-disabled',{disabled:true}),control(selector+'-last')];
   panels.set(selector,{controls,querySelectorAll(){return controls.filter(x=>!x.disabled)},contains(target){return controls.includes(target)},querySelector(){return controls[0]}});
  }
  const media={matches:true};
- const context={document,window:{matchMedia(){return media}},HTMLElement:Object,$:s=>document.querySelector(s),setExpanded(){},requestAnimationFrame(fn){fn()}};
+ const context={document,window:{matchMedia(){return media}},HTMLElement:Object,$:s=>document.querySelector(s),setExpanded(){},requestAnimationFrame(fn){if(deferredVisibility)frames.push(fn);else fn()}};
  const begin=html.indexOf('    const mobileMedia=');const end=html.indexOf('    function syncMobileUi',begin);
  assert.ok(begin>=0&&end>begin);vm.runInNewContext(html.slice(begin,end)+';globalThis.openSheet=openMobileSheet;globalThis.closeSheets=closeMobileSheets;',context);
  const kb=html.indexOf("document.addEventListener('keydown',",html.indexOf('function setExpanded('));
  const ke=html.indexOf("\n    $('#mergePresetButton')",kb);assert.ok(kb>=0&&ke>kb);vm.runInNewContext(html.slice(kb,ke),context);
  function key(key,shiftKey=false){const event={key,shiftKey,prevented:false,preventDefault(){this.prevented=true}};listeners.keydown(event);return event;}
- return{context,document,panels,opener,classes,media,key};
+ function frame(){renderedFrames++;const pending=frames.splice(0);pending.forEach(fn=>fn())}
+ return{context,document,panels,opener,classes,media,key,frame};
 }
 for(const [name,selector] of [['palette','.palette'],['inspector','.inspector'],['tools','.mobile-tools-sheet'],['result','.result-bar']]){
  test(`${name} sheet focuses its first control and restores the opener on close`,()=>{
@@ -62,4 +64,41 @@ test('all four actual sheet shells keep an enabled close control outside dynamic
   const head=html.slice(start).match(/<div class="mobile-sheet-head">([\s\S]*?)<\/button>/)?.[1];
   assert.ok(head,fragment);assert.match(head,/data-mobile-sheet-close/);assert.doesNotMatch(head,/\bdisabled\b|\bhidden\b/);
  }
+});
+
+// Chromium ignores focus while the opening CSS visibility transition is still
+// at its hidden starting frame. The harness models that browser boundary only;
+// native preview checks verify the real rendering and focus result.
+for(const [name,selector] of [['palette','.palette'],['inspector','.inspector'],['tools','.mobile-tools-sheet'],['result','.result-bar']]){
+ test(`${name} receives initial focus after its opening visibility frames`,()=>{
+  const h=harness({deferredVisibility:true});h.context.openSheet(name);
+  assert.equal(h.document.activeElement,h.opener);h.frame();h.frame();
+  assert.equal(h.document.activeElement,h.panels.get(selector).controls[0]);
+ });
+}
+test('pending initial focus is cancelled when its sheet closes',()=>{
+ const h=harness({deferredVisibility:true});h.context.openSheet('tools');h.context.closeSheets();h.frame();h.frame();
+ assert.equal(h.document.activeElement,h.opener);
+});
+test('pending initial focus cannot reclaim focus from a newer sheet',()=>{
+ const h=harness({deferredVisibility:true});h.context.openSheet('palette');h.frame();h.context.openSheet('tools');h.frame();
+ assert.equal(h.document.activeElement,h.opener);h.frame();
+ assert.equal(h.document.activeElement,h.panels.get('.mobile-tools-sheet').controls[0]);
+});
+test('closing and reopening the same sheet invalidates its older focus request',()=>{
+ const h=harness({deferredVisibility:true});h.context.openSheet('tools');h.frame();h.context.closeSheets();h.context.openSheet('tools');h.frame();
+ assert.equal(h.document.activeElement,h.opener);h.frame();
+ assert.equal(h.document.activeElement,h.panels.get('.mobile-tools-sheet').controls[0]);
+});
+test('pending sheet focus does not steal focus from a native dialog',()=>{
+ const h=harness({deferredVisibility:true});h.context.openSheet('inspector');h.document.dialogOpen=true;h.frame();h.frame();
+ assert.equal(h.document.activeElement,h.opener);
+});
+test('pending sheet focus is skipped when resizing to desktop',()=>{
+ const h=harness({deferredVisibility:true});h.context.openSheet('result');h.media.matches=false;h.frame();h.frame();
+ assert.equal(h.document.activeElement,h.opener);
+});
+test('pending initial focus preserves a control already chosen inside the sheet',()=>{
+ const h=harness({deferredVisibility:true});h.context.openSheet('tools');h.document.activeElement=h.panels.get('.mobile-tools-sheet').controls[3];h.frame();h.frame();
+ assert.equal(h.document.activeElement,h.panels.get('.mobile-tools-sheet').controls[3]);
 });
