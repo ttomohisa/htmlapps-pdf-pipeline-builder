@@ -143,3 +143,7 @@ test('a superseded JSON read resets its picker so the same file can be chosen ag
  const run=harness();await run(`(async()=>{let finish;$('#loadGraphInput').value='A.json';$('#loadGraphInput').files=[{text:()=>new Promise(r=>finish=r)}];const importing=$('#loadGraphInput').onchange();confirmAnswer=false;await $('#mergePresetButton').onclick();finish(Core.serializeGraph(linearGraph()));await importing})()`);
  assert.equal(run("$('#loadGraphInput').value"),'');
 });
+
+test('Quick Recipe passes its original control to the asynchronous output preview',async()=>{
+ const run=harness();await run(`(async()=>{recipes=[{id:'r',name:'Saved',graph:linearGraph()}];quickRecipeFiles.set('r',new Map([['input-1',file('recipe.pdf',3)]]));const button=$('#recipeRun');const quick=runQuickRecipe('r',button);await tick();pending[0].resolve(result(3));await quick;if(previewResults[0][3]!==button)throw Error('output preview lost its initiating control')})()`);
+});

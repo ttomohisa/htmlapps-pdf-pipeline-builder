@@ -20,7 +20,7 @@ test('v0.8.4 Quick Recipe opens output preview and does not auto-download',()=>{
   assert.match(template,/id="outputPreviewDialog"/);
   assert.match(template,/id="outputPreviewCanvas"/);
   assert.match(template,/id="outputPreviewSaveButton"/);
-  assert.match(template,/openOutputPreview\(result\.bytes,result\.filename,result\.pageCount\)/);
+  assert.match(template,/openOutputPreview\(result\.bytes,result\.filename,result\.pageCount,button\)/);
   const start=template.indexOf('async function runQuickRecipe(');
   const end=template.indexOf('function saveRecipe(',start);
   const fn=template.slice(start,end);
