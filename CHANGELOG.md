@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.4 - 2026-10-10
+
+- Keep native dialog headers visible and content scrollable in narrow/short viewports; lock background page scrolling.
+- Contain keyboard focus in mobile sheets and restore the opening control after close; wait for opening visibility before assigning initial focus and cancel stale focus requests after close, reopen, or layout changes; preserve nested native dialog keyboard behavior.
+- Restore the initiating Quick Recipe control after dismissing its asynchronous output preview, without stealing focus from newer previews or native dialogs.
+- Wrap long node filenames, keep long output-preview metadata within its header with the full title available, and retain the existing local-processing shield artwork.
+- Add source and generated-release regression coverage without changing graph semantics, Core, or dependencies.
+
 ## 1.1.3 - 2026-10-09
 
 - Normalize icon brand color and exact 25% background corner radii without changing artwork.

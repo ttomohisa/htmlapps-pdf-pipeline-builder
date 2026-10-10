@@ -52,6 +52,8 @@ The release builder writes the same standalone HTML bytes to both `pdf-pipeline-
 
 ## Usage
 
+Dialogs keep their close controls visible in short windows. At narrow widths, Add / Settings / More / Result panels contain Tab navigation and restore focus when closed.
+
 1. Add one or more **PDF Input** nodes and choose local PDF files.
 2. Add processing nodes by clicking the palette or dragging a node onto the Canvas.
 3. Connect nodes in processing order. Use Split / Merge when you need branches.

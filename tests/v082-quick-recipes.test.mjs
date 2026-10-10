@@ -22,7 +22,7 @@ test('v0.8.2 quick Recipe executes in isolation instead of replacing the Canvas 
   assert.match(template,/async function runQuickRecipe\(/);
   assert.match(template,/Core\.deserializeGraph\(JSON\.stringify\(recipe\.graph\),\{registry\}\)/);
   assert.match(template,/evaluateGraph\(graph,files/);
-  assert.match(template,/openOutputPreview\(result\.bytes,result\.filename,result\.pageCount\)/);
+  assert.match(template,/openOutputPreview\(result\.bytes,result\.filename,result\.pageCount,button\)/);
   const start=template.indexOf('async function runQuickRecipe(');
   const end=template.indexOf('function saveRecipe(',start);
   const fn=template.slice(start,end);
