@@ -259,3 +259,7 @@ Write-Host "[OK] Application and generated-release regression tests passed." -Fo
 
 & node (Join-Path $Root "scripts/test-icon-normalization.cjs")
 if ($LASTEXITCODE -ne 0) { throw "Icon normalization checks failed." }
+
+# Keep internal QA/implementation prose out of user-facing help.
+& node (Join-Path $Root "tests/help-copy.test.cjs")
+if ($LASTEXITCODE -ne 0) { throw "User-facing help copy regression failed." }

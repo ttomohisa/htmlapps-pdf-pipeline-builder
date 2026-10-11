@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Clarify Japanese and English help by removing internal layout, implementation, and audit commentary while preserving usage guidance and cautions.
+
 ## 1.1.4 - 2026-10-10
 
 - Keep native dialog headers visible and content scrollable in narrow/short viewports; lock background page scrolling.
