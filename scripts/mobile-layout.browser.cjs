@@ -27,7 +27,7 @@ async function main(){
      const bar=page.locator(cfg.nav);assert.equal(await bar.isVisible(),width<=cfg.bp,label+': functional bar unchanged');
      if(width<=cfg.bp){
       await bounds(bar,width,height,label);
-      if(cfg.slug==='pdf-pipeline-builder'){await page.locator('#mobileAddButton').click();assert.equal(await page.locator('.palette').isVisible(),true);await page.keyboard.press('Escape');assert.equal(await page.locator('.palette').isVisible(),false);}
+      if(cfg.slug==='pdf-pipeline-builder'){await page.locator('#mobileAddButton').click();await page.locator('.palette').waitFor({state:'visible',timeout:3000});assert.equal(await page.locator('.palette').isVisible(),true);await page.keyboard.press('Escape');await page.locator('.palette').waitFor({state:'hidden',timeout:3000});assert.equal(await page.locator('.palette').isVisible(),false);}
       else{assert.equal(await page.locator('#mobileCompressButton').isDisabled(),true);await page.locator('#mobileSettingsButton').click();await page.locator('#mobileFileButton').click();}
      }
     }
