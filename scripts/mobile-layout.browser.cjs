@@ -33,6 +33,9 @@ async function main(){
     }
     for(const w of [cfg.bp+1,cfg.bp,width]){await page.setViewportSize({width:w,height});assert.equal(await page.locator(cfg.footer).isVisible(),w>cfg.bp,label+': footer resize');}
     await page.evaluate(()=>scrollTo({left:0,top:0,behavior:'instant'}));await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+    // A desktop-to-phone resize transitions every existing sheet for 180–200 ms.
+    // Observe their real closed state instead of capturing a translucent transition.
+    if(width<=cfg.bp)await page.waitForFunction(()=>!document.body.classList.contains('mobile-sheet-open')&&[...document.querySelectorAll('.palette,.inspector,.result-bar,.mobile-tools-sheet')].every(el=>{const s=getComputedStyle(el);return s.visibility==='hidden'&&s.opacity==='0'&&el.getAnimations().every(a=>a.playState==='finished');}),{},{timeout:3000});
     assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),label+': page width');
     if(cfg.nav&&width<=cfg.bp)await bounds(page.locator(cfg.nav),width,height,label);
     if(cfg.slug!=='video-compressor'&&file===cfg.file&&[1360,320].includes(width)){
