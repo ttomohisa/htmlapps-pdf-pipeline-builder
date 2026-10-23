@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Hide only the informational footer in the existing smartphone layout; keep controls and desktop visibility unchanged.
+
 - Clarify Japanese and English help by removing internal layout, implementation, and audit commentary while preserving usage guidance and cautions.
 
 ## 1.1.4 - 2026-10-10

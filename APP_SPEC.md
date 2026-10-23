@@ -335,3 +335,7 @@ Not yet included:
 - Entering floating enlarged mode temporarily forces MiniMap visible and restores the previous MiniMap preference when leaving.
 - Each intermediate Preview thumbnail has an expand action that opens the same local Blob PDF in a larger dialog; no external viewer or network request is used.
 - Graph schema, Recipe schema, and Node Editor Core remain unchanged from v0.8.0.
+
+## Smartphone informational footer
+
+Hide only `main > footer` at the existing 760 px phone/action-bar breakpoint. Preserve the fixed functional action bar, page bottom clearance, desktop footer, Help content, header version and local-processing badge. No lower build information is added.
