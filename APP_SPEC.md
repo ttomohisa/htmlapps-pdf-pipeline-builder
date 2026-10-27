@@ -1,4 +1,4 @@
-# PDF Pipeline Builder v1.1.4 — Application Specification
+# PDF Pipeline Builder v1.1.5 — Application Specification
 
 ## v1.1.4 — Responsive dialogs and keyboard focus
 
